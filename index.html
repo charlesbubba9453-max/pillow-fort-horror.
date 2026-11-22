@@ -32,9 +32,9 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 @media(max-width:700px){#vpP{width:min(260px,60vw);top:auto;bottom:70px}}
 </style></head><body>
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
-<div id="hud"><span></span><small>Desktop: WASD + mouse, E use computer / pick up plush, Tab leaderboard, P phone<br>VR: touch the ground with your hands and push to walk (like Gorilla Tag), or hold a grip and swing your arm · left trigger at belly = pillow (flick to throw it at the monster to stun it) · grab walls, rocks, trees to climb · hold right trigger to point · X once = leaderboard, twice = phone · Y = mic on/off</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
+<div id="hud"><span></span><small>Desktop: WASD + mouse, E use computer / pick up plush, Tab leaderboard, P phone<br>VR: left stick walks, right stick turns, grip grabs plush toys, A near the computer to code. Walk into the DOWN hole to go underground (monsters!). Stairs UP are in the underground green plaza.</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 17 · restart: dirt map, couch, code computer, mirror door, plush monkeys · everyone has the phone</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 18 · spawn on the couch · stick walking · legs · DOWN hole to the underground monster map</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -46,7 +46,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <div class="gr"><label for="col" style="margin:0;color:inherit">Shirt color</label> <input id="col" type="color" value="#c0392b"></div>
 <div class="gr"><input id="sm" type="checkbox"><label for="sm" style="margin:0;color:inherit">Smooth turning (VR)</label></div>
 <div class="gr"><input id="gore" type="checkbox"><label for="gore" style="margin:0;color:inherit">I’m 18 or older. Turn on gore.</label></div>
-<div class="help">The lobby is a safe zone. Everyone has the phone for now. Only Moderators and the Owner can warn, mute, ban, use no-clip and walk through the mirror.</div>
+<div class="help">The lobby and the underground plaza are safe zones. Everyone has the phone for now. Only Moderators and the Owner can warn, mute, ban, use no-clip and walk through the mirror.</div>
 </div></div>
 <script>
 window.__err=[];function __show(){var n=document.getElementById('note');if(n)n.textContent='The game hit an error: '+window.__err.join(' | ')+'  (send me this text)'}
@@ -59,9 +59,9 @@ addEventListener('unhandledrejection',function(e){window.__err.push(String((e.re
 <script>
 'use strict';
 const VER=4,W=60,H=60,CS=2,SW=W*2,SH=H*2,D4=[[1,0],[-1,0],[0,1],[0,-1]],$=i=>document.getElementById(i),R=Math.random,TAU=Math.PI*2;
-const ARM=1.6,BH=1.1,PLZ={x0:48,z0:50,x1:74,z1:72},CAB={x0:38,z0:34,x1:68,z1:50};
-const PHONE_ALL=true,phoneOK=()=>PHONE_ALL||S.role!=='Player';
-const inR=(r,x,z)=>x>=r.x0&&x<=r.x1&&z>=r.z0&&z<=r.z1,inSafe=(x,z)=>inR(PLZ,x,z)||inR(CAB,x,z),inCab=(x,z)=>inR(CAB,x,z);
+const ARM=1.6,BH=1.1,PLZ={x0:48,z0:92,x1:72,z1:116},CAB={x0:38,z0:34,x1:68,z1:50},LOBBY={x0:48,z0:50,x1:74,z1:72},SURF={x0:36,z0:30,x1:82,z1:82};
+const GT_HANDS=false,PHONE_ALL=true,phoneOK=()=>PHONE_ALL||S.role!=='Player';
+const inR=(r,x,z)=>x>=r.x0&&x<=r.x1&&z>=r.z0&&z<=r.z1,inSafe=(x,z)=>inR(PLZ,x,z)||inR(CAB,x,z)||inR(LOBBY,x,z),inCab=(x,z)=>inR(CAB,x,z);
 const RANK={Player:0,Moderator:1,Owner:2},RE=['Harassment','Inappropriate language','Cheating','Griefing','Other rule violation'];
 const TL=[['5 min',300],['30 min',1800],['1 hour',3600],['1 day',86400],['7 days',604800],['Permanent',0]];
 const S={role:'Player',name:'Player',id:'me',gore:0,strikes:0,muteT:0,banT:0,inv:0,nc:0,esp:0,bright:0,badge:1,dead:0,letter:0,score:0,pill:new Map(),mutedMe:new Set(),friends:new Set(),reports:[],log:[],lastRep:0,vr:0,note:'',bans:[]};
@@ -78,8 +78,19 @@ let tt;function msg(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clea
 function fx(c,t){const e=$('fx');e.style.background=c||'transparent';e.textContent=t||'';e.style.opacity=c?1:0}
 // ---------- map (same for everyone: generated from a fixed seed)
 function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-const HOUSES=[];
-const MAP=(()=>{const g=Array.from({length:H},()=>Array(W).fill('.'));for(let x=0;x<W;x++)g[0][x]=g[H-1][x]='#';for(let z=0;z<H;z++)g[z][0]=g[z][W-1]='#';g[30][30]='P';g[8][8]='M';for(let x=19;x<=33;x++){g[17][x]='#';g[24][x]='#'}for(let z=17;z<=24;z++){g[z][19]='#';g[z][33]='#'}g[24][26]='.';g[24][27]='.';return g})();
+const HOUSES=[[6,6,15,13,[10,13],['v',11,9]],[22,4,31,10,[26,10]],[40,6,52,14,[40,10],['v',46,8]],[5,24,14,31,[14,26],['h',28,9]],[45,24,54,32,[45,26],['h',28,50]],[8,40,17,48,[12,40],['v',13,44]]];
+const MAP=(()=>{const r=rng(20241121),g=Array.from({length:H},()=>Array(W).fill('.'));
+for(let x=0;x<W;x++)g[0][x]=g[H-1][x]='#';for(let z=0;z<H;z++)g[z][0]=g[z][W-1]='#';
+const box=(x0,z0,x1,z1)=>{for(let x=x0;x<=x1;x++)g[z0][x]=g[z1][x]='#';for(let z=z0;z<=z1;z++)g[z][x0]=g[z][x1]='#'};
+for(const h of HOUSES){box(h[0],h[1],h[2],h[3]);g[h[4][1]][h[4][0]]='D';const p=h[5];if(p){if(p[0]==='v'){for(let z=h[1]+1;z<h[3];z++)g[z][p[1]]='#';g[p[2]][p[1]]='D'}else{for(let x=h[0]+1;x<h[2];x++)g[p[1]][x]='#';g[p[1]][p[2]]='D'}}}
+const inH=(x,z,m)=>HOUSES.some(h=>x>=h[0]-m&&x<=h[2]+m&&z>=h[1]-m&&z<=h[3]+m);
+const skip=(x,z)=>inH(x,z,1)||(x>=15&&x<=43&&z>=12&&z<=43)||(x>=22&&x<=38&&z>=47&&z<=59)||(Math.abs(x-50)<=3&&Math.abs(z-50)<=3);
+let n=0;for(let i=0;i<900&&n<120;i++){const x=1+(r()*(W-2)|0),z=1+(r()*(H-2)|0);if(g[z][x]!=='.'||skip(x,z))continue;g[z][x]='r';n++}
+// the surface: a walled dirt yard (cells 17..41 x 14..41) with the staff room inside; nothing else on it
+for(let z=14;z<=41;z++)for(let x=17;x<=41;x++)g[z][x]='.';
+for(let x=17;x<=41;x++)g[14][x]=g[41][x]='#';for(let z=14;z<=41;z++)g[z][17]=g[z][41]='#';
+for(let x=19;x<=33;x++){g[17][x]='#';g[24][x]='#'}for(let z=17;z<=24;z++){g[z][19]='#';g[z][33]='#'}g[24][26]='.';g[24][27]='.';
+g[33][30]='P';g[53][29]='U';g[50][50]='M';return g})();
 const OBST=[];
 const ch=(cx,cz)=>(MAP[cz]&&MAP[cz][cx])||'#';
 const doors={};
@@ -91,7 +102,7 @@ const pk=(x,z)=>Math.floor(x)+','+Math.floor(z);
 S.pill=new Map();
 const solid=(x,z)=>blk(x,z)||(ELEV<1.05&&S.pill.has(pk(x,z)));
 const free=(x,z,r)=>!(solid(x-r,z-r)||solid(x+r,z-r)||solid(x-r,z+r)||solid(x+r,z+r));
-const walk=(sx,sz,mon)=>{const cx=sx>>1,cz=sz>>1,c=ch(cx,cz);if(c==='#'||c==='T'||c==='r')return false;if(inCab((cx+.5)*CS,(cz+.5)*CS))return false;if(mon&&inR(PLZ,(cx+.5)*CS,(cz+.5)*CS))return false;return true};
+const walk=(sx,sz,mon)=>{const cx=sx>>1,cz=sz>>1,c=ch(cx,cz);if(c==='#'||c==='T'||c==='r')return false;if(inCab((cx+.5)*CS,(cz+.5)*CS))return false;if(mon&&inR(PLZ,(cx+.5)*CS,(cz+.5)*CS))return false;if(mon&&inR(SURF,(cx+.5)*CS,(cz+.5)*CS))return false;return true};
 const rnd=mon=>{for(;;){const x=(R()*SW)|0,z=(R()*SH)|0;if(walk(x,z,mon))return[x+.5,z+.5]}};
 function step(fx,fz,tx,tz,mon){const s=Math.floor(fx)+Math.floor(fz)*SW,t=Math.floor(tx)+Math.floor(tz)*SW;if(s===t)return null;const pv=new Int16Array(SW*SH).fill(-1),q=[s];pv[s]=s;
 for(let i=0;i<q.length&&pv[t]<0;i++){const n=q[i],x=n%SW,z=(n/SW)|0;for(const[dx,dz]of D4){const nx=x+dx,nz=z+dz;if(nx<0||nz<0||nx>=SW||nz>=SH||!walk(nx,nz,mon))continue;const k=nx+nz*SW;if(pv[k]<0){pv[k]=n;q.push(k)}}}
@@ -124,11 +135,11 @@ const WCOL=[0x2a211c,0x4a5a6b,0x5b4a6b,0x4f6b52,0x7a5a3a,0x5a5a62,0x6b3e4a,0x3e5
 function mkDoor(x,z,c){const h=ch(x-1,z)==='#',g=new THREE.Group(),col=c==='S'?0x7a1f2b:0x5b3b22,m=new THREE.Mesh(new THREE.BoxGeometry(h?CS:.15,2.8,h?.15:CS),new THREE.MeshLambertMaterial({color:col})),k=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),new THREE.MeshBasicMaterial({color:0xd8b25a}));
 m.position.set(h?CS/2:0,1.4,h?0:CS/2);k.position.set(h?CS*.85:.12,1.3,h?.1:CS*.85);g.add(m,k);g.position.set((x+.5)*CS-(h?CS/2:0),0,(z+.5)*CS-(h?0:CS/2));scene.add(g);
 doors[x+','+z]={g,h,open:0,t:0,staff:c==='S',cx:(x+.5)*CS,cz:(z+.5)*CS}}
-let start,mstart;
+let start,mstart,ugStart;
 for(let z=0;z<H;z++)for(let x=0;x<W;x++){const c=MAP[z][x],cx=(x+.5)*CS,cz=(z+.5)*CS;
 if(c==='#'){wl.push([cx,cz,WCOL[Math.max(0,houseOf(x,z))%8]]);for(const[dx,dz,ry]of[[0,-1,Math.PI],[0,1,0],[-1,0,-Math.PI/2],[1,0,Math.PI/2]])if(ch(x+dx,z+dz)==='.'&&R()<.3&&houseOf(x,z)>=0)wins.push([cx+dx*(CS/2+.01),cz+dz*(CS/2+.01),ry])}
 else if(c==='D'||c==='S')mkDoor(x,z,c);else if(c==='T')trees.push([cx+(R()-.5)*.3,cz+(R()-.5)*.3,.8+R()*.6]);else if(c==='r')rocks.push([cx,cz,.7+R()*.6]);
-else if(c==='P')start=[cx,cz];else if(c==='M')mstart=[cx,cz];
+else if(c==='P')start=[cx,cz];else if(c==='U')ugStart=[cx,cz];else if(c==='M')mstart=[cx,cz];
 else if(c==='k'){const m=new THREE.Mesh(new THREE.BoxGeometry(.8,1,.5),new THREE.MeshBasicMaterial({color:0x33ff88}));m.position.set(cx,.5,cz);scene.add(m)}}
 {const o=new THREE.Object3D(),mk=(geo,mat,arr,fn)=>{const im=new THREE.InstancedMesh(geo,mat,arr.length);arr.forEach((q,i)=>{fn(o,q);o.updateMatrix();im.setMatrixAt(i,o.matrix)});scene.add(im);return im};
 const wm=mk(new THREE.BoxGeometry(CS,3,CS),new THREE.MeshLambertMaterial({color:0xffffff}),wl,(o,q)=>{o.position.set(q[0],1.5,q[1]);o.rotation.set(0,0,0);o.scale.set(1,1,1)});
@@ -140,7 +151,7 @@ mk(new THREE.ConeGeometry(1.1,2.4,7),fm,trees,(o,q)=>{o.position.set(q[0],4.6*q[
 mk(new THREE.DodecahedronGeometry(.9,0),new THREE.MeshLambertMaterial({color:0x4a4a52}),rocks,(o,q)=>{o.position.set(q[0],.4*q[2],q[1]);o.rotation.set(q[0],q[1],0);o.scale.set(q[2],q[2]*.7,q[2])});
 mk(new THREE.PlaneGeometry(.9,1.1),new THREE.MeshBasicMaterial({color:0xffd27a,side:THREE.DoubleSide}),wins,(o,q)=>{o.position.set(q[0],1.7,q[1]);o.rotation.set(0,q[2],0);o.scale.set(1,1,1)})}
 // roofs
-for(let i=0;i<HOUSES.length;i++){const h=HOUSES[i],w=(h[2]-h[0]+1)*CS,d=(h[3]-h[1]+1)*CS,cx=(h[0]+h[2]+1)*CS/2,cz=(h[1]+h[3]+1)*CS/2;
+if(0)for(let i=0;i<HOUSES.length;i++){const h=HOUSES[i],w=(h[2]-h[0]+1)*CS,d=(h[3]-h[1]+1)*CS,cx=(h[0]+h[2]+1)*CS/2,cz=(h[1]+h[3]+1)*CS/2;
 const s=new THREE.Mesh(new THREE.BoxGeometry(w+.5,.25,d+.5),new THREE.MeshLambertMaterial({color:0x241a1e}));s.position.set(cx,3.12,cz);scene.add(s);
 const g=new THREE.ConeGeometry(1,1,4);g.rotateY(Math.PI/4);const p=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:0x3a232b}));p.scale.set((w/2+.3)/.7071,2.2,(d/2+.3)/.7071);p.position.set(cx,3.25+1.1,cz);scene.add(p)}
 // plaza: safe-zone border, lamps, signs
@@ -186,7 +197,7 @@ const ax_=hx+fx*st,az_=hz+fz*st,ay_=.06+(vic?Math.abs(flail)*.1:lift);limb(a.leg
 const sx=s*.23*rx,sz=s*.23*rz;let hxx,hyy,hzz;const h=o.hl&&!vic?(i?o.hr:o.hl):null;
 if(vic){hxx=sx+rx*s*.1;hyy=shY+.35+Math.abs(flail)*.15;hzz=sz+rz*s*.1+fz*.0}
 else if(h){hxx=h[0]-o.x;hyy=h[1];hzz=h[2]-o.z}else{const sw=-Math.sin(ph)*.3*mv;hxx=sx+s*.04*rx+fx*sw;hyy=Math.max(.3,shY-.6+(mv?Math.abs(Math.sin(ph))*.04:0));hzz=sz+s*.04*rz+fz*sw}
-const mx=(sx+hxx)/2+s*.05*rx,my=(shY+hyy)/2-.08,mz=(sz+hzz)/2+s*.05*rz;limb(a.armU[i],sx,shY,sz,mx,my,mz);limb(a.armL[i],mx,my,mz,hxx,hyy,hzz);a.hands[i].position.set(hxx,hyy,hzz);const ra=!!(rp&(1<<i)),rl=!!(rp&(4<<i));a.armU[i].visible=a.armL[i].visible=a.hands[i].visible=!ra;a.legs[i].visible=a.feet[i].visible=false}
+const mx=(sx+hxx)/2+s*.05*rx,my=(shY+hyy)/2-.08,mz=(sz+hzz)/2+s*.05*rz;limb(a.armU[i],sx,shY,sz,mx,my,mz);limb(a.armL[i],mx,my,mz,hxx,hyy,hzz);a.hands[i].position.set(hxx,hyy,hzz);const ra=!!(rp&(1<<i)),rl=!!(rp&(4<<i));a.armU[i].visible=a.armL[i].visible=a.hands[i].visible=!ra;a.legs[i].visible=a.feet[i].visible=!rl}
 limb(a.neck,0,shY+.02,0,0,H-.1,0);a.neck.visible=!gore&&!hd;a.stump.visible=!!gore||hd;a.stump.position.set(0,H-.12,0);a.head.visible=!gore&&!hd;a.head.position.set(0,H,0);a.head.rotation.y=o.yaw;a.tag.position.set(0,H+.45,0);
 setTag(a.tag,o.name,o.role,(o.badge&&o.role!=='Player')?1:0);o.ex.visible=!!S.esp||(typeof aimOn!=='undefined'&&aimOn&&o===aimBot);o.ex.position.set(o.x,1,o.z)}
 const ATT={stand:.8,pull:1.5,snap:2.3,drop:3.4,end:4.0},TYE=[4.0,4.8,4.8],RIP=[1.5,2.1,2.7,3.3],FADE=[1.5,1.5,2.0];
@@ -267,12 +278,12 @@ if(q.y<=.05){q.y=.05;if(p.k==='b')p.m.scale.set(2+R()*3,.1,2+R()*3);p.m.rotation
 function goreAt(x,z){if(!S.gore)return;burst(x,1.1,z,45,'b');burst(x,1.3,z,7,'g')}
 function killSelf(x,z){if(S.dead)return;S.dead=1;S.score=0;snd(180,.9,'sawtooth',.15,40);goreAt(x,z);fx(S.gore?'rgba(110,0,0,.85)':'rgba(0,0,0,.92)','You were caught');fadeM.material.color.set(S.gore?0x5a0000:0);fadeM.visible=true;
 if(NET.mode==='host')netBcast({t:'k',id:S.id,x:r2(x),z:r2(z)});setTimeout(respawn,3500)}
-function respawn(){teleportTo(start[0]+(R()-.5)*6,start[1]-R()*4);S.dead=0;fx('');fadeM.visible=false;}
+function respawn(){teleportTo(start[0],start[1]);P.y=.55;S.dead=0;fx('');fadeM.visible=false;}
 function killRemote(b){b.dead=1;b.score=0;goreAt(b.x,b.z);netBcast({t:'k',id:b.id,x:r2(b.x),z:r2(b.z)});setTimeout(()=>{b.dead=0;if(b.sim){b.x=start[0]+(R()-.5)*8;b.z=start[1]-2-R()*6;b.nx_=null;b.tgt=null}},3800)}
 // ---------- the Stitcher's brain (runs on the host, or alone in solo)
 function targets(){const a=[];if(!S.dead&&!S.inv)a.push({self:1,x:HX,z:HZ,nc:S.nc});for(const b of bots)if((b.remote||b.sim)&&!b.dead&&!b.inv&&b.banT<Date.now())a.push({self:0,x:b.x,z:b.z,nc:b.nc,b});return a}
 function los(ax,az,bx,bz){const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz);for(let i=1;i<L/.5;i++)if(blk(ax+dx/L*i*.5,az+dz/L*i*.5))return 0;return 1}
-const MON_ON=false;
+const MON_ON=true;
 function monAI(m,dt){if(!MON_ON){m.x=-900;m.z=-900;m.moving=false;return}if(m.att){m.moving=false;m.camp=0;return}
 // safe-zone camping: a monster that lingers right outside the start plaza is sent back to its own spawn point
 const dpz=Math.hypot(Math.max(PLZ.x0-m.x,0,m.x-PLZ.x1),Math.max(PLZ.z0-m.z,0,m.z-PLZ.z1));m.camp=dpz<12?(m.camp||0)+dt:Math.max(0,(m.camp||0)-dt*2);if(m.camp>6){m.camp=0;m.x=m.sp[0];m.z=m.sp[1];m.mode='wander';m.nx_=null;m.tgt=null;m.stun=0;m.moving=false;return}if(m.stun>0){m.stun-=dt;m.moving=false;return}const ts=targets();let best=null,bd=m.det||26;
@@ -482,12 +493,13 @@ if(L&&vpP.vis&&vpP.mesh.parent!==L.o){L.o.add(vpP.mesh);vpP.mesh.position.set(.1
 const ry=rig.rotation.y,c=Math.cos(ry),s=Math.sin(ry);let mx=0,mz=0,n=0,jump=0,clg=0,cdy=0,ncl=0;
 if(!S.dead&&!S.grabbed&&!S.banT){for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position,hc=cam.position,vx=hc.x+(p.x-hc.x)*1.5,vy=hc.y+(p.y-hc.y)*1.5,vz=hc.z+(p.z-hc.z)*1.5,grip=!!(b[1]&&b[1].pressed),rh=hw(t),cl=grip&&climbable(rh),g0=p.y<=(t.hg?.22:.14)-RY&&P.y<.45,gr=g0||(ELEV=0,blk(rh[0],rh[2])&&rh[1]-RY<P.y+3);t.hg=g0;
 // Gorilla-Tag style: touch the ground (or a surface) with a hand and push against it to move; or hold a grip and swing your arm anywhere. Grip near walls/trees/rocks to climb.
-if(cl||gr){if(t.lp){const dx=vx-t.lp[0],dy=vy-t.lp[1],dz=vz-t.lp[2];mx-=dx*c+dz*s;mz-=-dx*s+dz*c;if(dy<0&&gr&&!cl)jump=Math.max(jump,-dy/dt);n++;if(cl){cdy+=dy;ncl++;clg=1;if(!t.cl){t.cl=1;buzz(t,.5,40)}}else{t.cl=0;if(gr&&!t.gc){t.gc=1;buzz(t,.15,20)}}}t.lp=[vx,vy,vz]}else{t.lp=null;t.cl=0;t.gc=0}}
+if(cl||(GT_HANDS&&gr)){if(t.lp){const dx=vx-t.lp[0],dy=vy-t.lp[1],dz=vz-t.lp[2];mx-=dx*c+dz*s;mz-=-dx*s+dz*c;if(dy<0&&gr&&!cl)jump=Math.max(jump,-dy/dt);n++;if(cl){cdy+=dy;ncl++;clg=1;if(!t.cl){t.cl=1;buzz(t,.5,40)}}else{t.cl=0;if(gr&&!t.gc){t.gc=1;buzz(t,.15,20)}}}t.lp=[vx,vy,vz]}else{t.lp=null;t.cl=0;t.gc=0}}
 if(ncl)P.y=Math.max(0,Math.min(3.7,P.y-cdy/ncl*.75));
 if(n){const l=Math.hypot(mx,mz),mm=(S.nc?16:12)*dt;if(l>mm){mx*=mm/l;mz*=mm/l}lvx=mx/dt;lvz=mz/dt;if(jump>1.8&&P.on&&!clg)P.vy=Math.min(5,jump*.5)}else{const f=Math.exp(-1.8*dt);lvx*=f;lvz*=f;mx=lvx*dt;mz=lvz*dt}
 const hy=headYaw(),fx_=-Math.sin(hy),fz=-Math.cos(hy);
 if(S.nc&&L&&L.src.gamepad&&!S.dead&&!S.grabbed){const a=L.src.gamepad.axes,sx=a[2]||0,sy=a[3]||0;if(Math.hypot(sx,sy)>.15){mx+=(fx_*-sy+Math.cos(hy)*sx)*7*dt;mz+=(fz*-sy-Math.sin(hy)*sx)*7*dt}}
-// no stick walking: you move with your hands (grips). The right stick only turns.
+if(!S.nc&&L&&L.src.gamepad&&!S.dead&&!S.grabbed){const a=L.src.gamepad.axes,sx=a[2]||0,sy=a[3]||0;if(Math.hypot(sx,sy)>.15){mx+=(fx_*-sy+Math.cos(hy)*sx)*3.4*dt;mz+=(fz*-sy-Math.sin(hy)*sx)*3.4*dt}}
+// left stick walks; right stick turns.
 if(Rt&&Rt.src.gamepad){const a=Rt.src.gamepad.axes;snapCD-=dt;if(S.smooth){if(Math.abs(a[2]||0)>.2)turnRig(-(a[2])*dt*1.9)}else if(Math.abs(a[2]||0)>.7&&snapCD<=0){snapCD=.3;turnRig((a[2]>0?-1:1)*Math.PI/6)}
 if(S.nc)P.y=Math.max(0,P.y-(a[3]||0)*dt*(S.nc?9:4))}}
 if(mx||mz)moveRig(mx,mz);
@@ -539,7 +551,7 @@ const setNote=t=>{$('note').textContent=t;try{$('menu').scrollTop=0}catch(e){}};
 addEventListener('error',e=>{if(!started)setNote('Error: '+(e.message||'something broke')+'. Tell me this message.')});
 addEventListener('unhandledrejection',e=>{if(!started)setNote('Error: '+((e.reason&&e.reason.message)||e.reason||'something broke'))});
 function simBots(){for(const n of['Mira','Jax','Pip']){const b=newOther('s'+n,n,1);b.x=start[0]+(R()-.5)*10;b.z=start[1]-2-R()*6;b.yaw=R()*6;b.score=(R()*40)|0}}
-function beginGame(mode){NET.mode=mode;if(mode!=='solo')startVoice();started=true;ambience();$('menu').style.display='none';$('hud').style.display='block';P.x=start[0];P.z=start[1];P.y=0;P.vx=P.vy=P.vz=0;P.yaw=0;P.pit=0;okX=P.x;okZ=P.z;S.dead=0;S.banT=0;S.score=0;if(mode!=='client')simBots();applyNight();fx('');
+function beginGame(mode){NET.mode=mode;if(mode!=='solo')startVoice();started=true;ambience();$('menu').style.display='none';$('hud').style.display='block';P.x=start[0];P.z=start[1];P.y=.55;P.vx=P.vy=P.vz=0;P.yaw=0;P.pit=0;okX=P.x;okZ=P.z;S.dead=0;S.banT=0;S.score=0;if(mode!=='client')simBots();applyNight();fx('');
 msg('Tap X twice for your phone.')}
 function showMenu(t){started=false;for(const v of VPS)showVP(v,0);$('hud').style.display='none';$('menu').style.display='flex';setNote(t||'');try{const s=ren.xr.getSession&&ren.xr.getSession();s&&s.end()}catch(e){}}
 function pre(){S.name=($('nm').value||'Player').replace(/[^\w \-]/g,'').slice(0,14)||'Player';S.gore=$('gore').checked?1:0;S.smooth=$('sm')&&$('sm').checked?1:0;S.col=($('col')&&$('col').value)||'#c0392b';try{localStorage.setItem('pfh_n',S.name);localStorage.setItem('pfh_r',$('rs').value);localStorage.setItem('pfh_c',S.col);localStorage.setItem('pfh_s',S.smooth?'1':'0')}catch(e){}}
@@ -564,7 +576,7 @@ if(!phoneOK()&&vpP.vis)showVP(vpP,0);if(!isStaff())S.nc=0;
 for(const m of MS){if(NET.mode==='client'&&!m.att){const k=Math.min(1,dt*10);m.x+=(m.tx-m.x)*k;m.z+=(m.tz-m.z)*k;let d=(m.tyaw||0)-m.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));m.yaw+=d*k}else monAI(m,dt);monAnim(m,dt,m.moving)}
 {const gm=MS.find(m=>m.att&&m.vic==='self'&&m.vp);if(S.grabbed&&gm){const V=gm.vp;HX=V.x;HZ=V.z;HY=V.y;if(vrNow()){const y=rig.rotation.y,c=Math.cos(y),s=Math.sin(y),p=cam.position;rig.position.set(V.x-(c*p.x+s*p.z),V.y-p.y,V.z-(-s*p.x+c*p.z))}else{cam.position.set(V.x,V.y,V.z);P.yaw+=(Math.atan2(-(gm.x-HX),-(gm.z-HZ))-P.yaw)*Math.min(1,dt*3);cam.rotation.set(-.2,P.yaw,0)}P.x=HX;P.z=HZ}}
 for(const k in doors){const d=doors[k];d.open+=(d.t-d.open)*Math.min(1,dt*4);d.g.rotation.y=(d.h?-1:1)*d.open*1.55}
-for(const b of bots){if(b.sim){if(!b.dead&&(!b.tgt||go(b,b.tgt[0],b.tgt[1],1.5,dt)))b.tgt=R()<.25?[PLZ.x0+2+R()*(PLZ.x1-PLZ.x0-4),PLZ.z0+3+R()*(PLZ.z1-PLZ.z0-5)]:rnd(0)}updAv(b,dt)}
+for(const b of bots){if(b.sim){if(!b.dead&&(!b.tgt||go(b,b.tgt[0],b.tgt[1],1.5,dt)))b.tgt=[LOBBY.x0+2+R()*(LOBBY.x1-LOBBY.x0-4),LOBBY.z0+3+R()*(LOBBY.z1-LOBBY.z0-5)]}updAv(b,dt)}
 parts_(dt);netTick(dt);voiceTick(dt);
 sc+=dt;if(sc>=1){sc-=1;if(NET.mode!=='client'){if(!S.dead&&!inSafe(HX,HZ))S.score++;for(const b of bots){if(b.sim){if(!b.dead&&!inSafe(b.x,b.z))b.score++}else if(b.remote&&!b.dead&&!inSafe(b.x,b.z))b.score++}}drawSign()}
 pT+=dt;if(pT>.6){pT=0;if(vpB.vis)paint(vpB);if(vpP.vis)paint(vpP)}
@@ -574,11 +586,21 @@ drawSign();ren.setAnimationLoop(tick);
 
 // ---------- restart: dirt lobby (safe zone), couch, computer you can code on, mirror door to the staff room, plush monkeys
 const box=(w,h,d,col,x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:col}));m.position.set(x,y,z);scene.add(m);return m};
-// lobby: green safe-zone outline + sign
-{const m=new THREE.MeshBasicMaterial({color:0x44ff99,transparent:true,opacity:.6}),add=(w,d,x,z)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,.05,d),m);b.position.set(x,.05,z);scene.add(b)};
-const w=PLZ.x1-PLZ.x0,d=PLZ.z1-PLZ.z0,cx=(PLZ.x0+PLZ.x1)/2,cz=(PLZ.z0+PLZ.z1)/2;add(w,.25,cx,PLZ.z0);add(w,.25,cx,PLZ.z1);add(.25,d,PLZ.x0,cz);add(.25,d,PLZ.x1,cz);
-const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,1),new THREE.MeshBasicMaterial({map:signTex('SAFE ZONE','#44ff99'),side:THREE.DoubleSide}));sg.position.set(cx,3.4,PLZ.z0+.4);scene.add(sg);
-const pl=new THREE.PointLight(0xffd9a0,1.1,40);pl.position.set(cx,4,cz);scene.add(pl)}
+// safe zones: the lobby on the surface and the plaza underground (green outline + sign + light)
+for(const Z of[LOBBY,PLZ]){const m=new THREE.MeshBasicMaterial({color:0x44ff99,transparent:true,opacity:.6}),add=(w,d,x,z)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,.05,d),m);b.position.set(x,.05,z);scene.add(b)};
+const w=Z.x1-Z.x0,d=Z.z1-Z.z0,cx=(Z.x0+Z.x1)/2,cz=(Z.z0+Z.z1)/2;add(w,.25,cx,Z.z0);add(w,.25,cx,Z.z1);add(.25,d,Z.x0,cz);add(.25,d,Z.x1,cz);
+const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,1),new THREE.MeshBasicMaterial({map:signTex('SAFE ZONE','#44ff99'),side:THREE.DoubleSide}));sg.position.set(cx,Z===PLZ?2.6:3.4,Z.z0+.4);scene.add(sg);
+const pl=new THREE.PointLight(0xffd9a0,1.1,40);pl.position.set(cx,Z===PLZ?2.8:4,cz);scene.add(pl)}
+// underground: stone floor, dark ceiling, stairs DOWN in the lobby and stairs UP in the underground plaza
+{const stone=new THREE.MeshLambertMaterial({map:tileT});pad(0,0,59,14,stone);pad(0,41,59,59,stone);pad(0,15,17,40,stone);pad(41,15,59,40,stone);
+const ceil=new THREE.MeshLambertMaterial({color:0x1c1612});for(const[x0,z0,x1,z1]of[[0,0,120,30],[0,82,120,120],[0,30,36,82],[82,30,120,82]]){const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,.3,z1-z0),ceil);m.position.set((x0+x1)/2,3.55,(z0+z1)/2);scene.add(m)}}
+const HOLE={x:72,z:60},UPS={x:66,z:100};
+function stairs(P_,col,label,lcol){const pit=new THREE.Mesh(new THREE.PlaneGeometry(2.4,2.4),new THREE.MeshBasicMaterial({color:col===0xff4a5a?0x000000:0x1a2a1a}));pit.rotation.x=-Math.PI/2;pit.position.set(P_.x,.04,P_.z);scene.add(pit);
+const rm=new THREE.MeshBasicMaterial({color:col});for(const[w,d,dx,dz]of[[2.6,.12,0,-1.25],[2.6,.12,0,1.25],[.12,2.6,-1.25,0],[.12,2.6,1.25,0]]){const b=new THREE.Mesh(new THREE.BoxGeometry(w,.08,d),rm);b.position.set(P_.x+dx,.06,P_.z+dz);scene.add(b)}
+for(let k=0;k<4;k++)box(2.0-k*.35,.05,.38,col===0xff4a5a?0x3a2a22:0x4a5a3a,P_.x,.07,P_.z-.8+k*.5);
+const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:signTex(label,lcol,'#12141c',512,128,60),side:THREE.DoubleSide}));sg.position.set(P_.x,2.3,P_.z);scene.add(sg);
+const l=new THREE.PointLight(col,1.2,14);l.position.set(P_.x,1.6,P_.z);scene.add(l)}
+stairs(HOLE,0xff4a5a,'DOWN ▼','#ff6a7a');stairs(UPS,0x44ff99,'UP ▲','#44ff99');
 // couch (faces the spawn)
 {const CX=61,CZ=67;box(3,.3,1.1,0x4a1f2b,CX,.3,CZ);box(1.4,.2,.9,0x7a3347,CX-.72,.55,CZ-.05);box(1.4,.2,.9,0x7a3347,CX+.72,.55,CZ-.05);box(3.1,.85,.3,0x5b2636,CX,.85,CZ+.5);box(.3,.65,1.1,0x5b2636,CX-1.45,.62,CZ);box(.3,.65,1.1,0x5b2636,CX+1.45,.62,CZ);OBST.push([CX-1.6,CX+1.6,CZ-.55,CZ+.65,.5])}
 // computer desk
@@ -650,8 +672,11 @@ function useExtra(){if(vpC.vis){showVP(vpC,0);return true}
 if(heldItem&&heldItem.held==='desk'){heldItem.held=0;heldItem.vx=heldItem.vz=0;heldItem=null;return true}
 if(Math.hypot(HX-COMP.x,HZ-COMP.z)<3.4){showVP(vpC,1);return true}
 const it=itemNear(HX,HY-.4,HZ,2.4);if(it){it.held='desk';heldItem=it;return true}return false}
-let compNear=0;
+let compNear=0,stairCD=0;
 function extraFrame(dt){const now=performance.now();
+stairCD=Math.max(0,stairCD-dt);
+if(!stairCD&&!S.dead&&!S.grabbed){if(Math.hypot(HX-HOLE.x,HZ-HOLE.z)<1.1&&P.y<.4){stairCD=2.5;teleportTo(ugStart[0],ugStart[1]);msg('Underground! Monsters hunt here. The green plaza is safe, and the stairs UP are in it.')}
+else if(Math.hypot(HX-UPS.x,HZ-UPS.z)<1.1){stairCD=2.5;teleportTo(HOLE.x,HOLE.z+4);msg('Back up in the lobby')}}
 const near=Math.hypot(HX-COMP.x,HZ-COMP.z)<3.4;if(near&&!compNear&&!vpC.vis)msg('Press E (or A) to use the computer');compNear=near;
 let L=null,Rt=null;if(vrNow())for(const t of CT)if(t.src)(t.src.handedness==='left'?L=t:Rt=t);
 [L,Rt].forEach((t,i)=>{if(!t){lg[i]=0;lhp[i]=null;return}const gp=t.src.gamepad,b=gp?gp.buttons:[],gr=!!(b[1]&&b[1].pressed),p=hw(t),pv=lhp[i],v=pv&&dt>0?[(p[0]-pv[0])/dt,(p[1]-pv[1])/dt,(p[2]-pv[2])/dt]:[0,0,0];lhp[i]=p;
