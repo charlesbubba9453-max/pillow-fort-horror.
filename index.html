@@ -33,15 +33,15 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E door, F pillow, G throw pillow, Tab leaderboard, P phone (staff)<br>VR: touch the ground with your hands and push to walk (like Gorilla Tag), or hold a grip and swing your arm · left trigger at belly = pillow (flick to throw it at the monster to stun it) · grab walls, rocks, trees to climb · hold right trigger to point · X once = leaderboard, twice = phone · Y = mic on/off</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">Build with pillows. Don’t get caught by the Stitcher.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 10 · no block placing · no staff room · bans on phone · 3 monsters · easier hand movement</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">Build with pillows. Don’t get caught by the Stitcher.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 11 · instant random room · no room code · no block placing · no staff room · bans on phone · 3 monsters · easier hand movement</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
-<div class="row" style="margin-top:12px"><button id="bQuick" style="background:#1f6b3a">Quick Play (public room)</button></div>
+<div class="row" style="margin-top:12px"><button id="bQuick" style="background:#1f6b3a">Play now (random room)</button></div>
 <div class="row" style="margin-top:8px"><button id="bHost" style="display:none;background:#7a1f2b">Host a room</button><button id="bSolo">Play solo</button></div>
-<label for="jc">Or join a friend (friends join as Players)</label>
+<label for="jc" style="display:none"></label>
 <div class="row" style="margin-top:6px"><button id="bKey" style="font-size:12px;padding:6px 10px">Staff key (Owner / Moderator)</button></div><div id="keyBox" style="display:none"><textarea id="keyOut" readonly rows="4" style="width:100%;font-size:11px"></textarea><div id="keyMsg" style="font-size:12px"></div></div>
-<div class="row"><input id="jc" type="text" maxlength="6" placeholder="ROOM CODE" autocomplete="off"><button id="bJoin">Join</button></div>
+<div class="row" style="display:none"><input id="jc" type="text" maxlength="6" placeholder="ROOM CODE" autocomplete="off"><button id="bJoin">Join</button></div>
 <div class="gr"><label for="col" style="margin:0;color:inherit">Shirt color</label> <input id="col" type="color" value="#c0392b"></div>
 <div class="gr"><input id="sm" type="checkbox"><label for="sm" style="margin:0;color:inherit">Smooth turning (VR)</label></div>
 <div class="gr"><input id="gore" type="checkbox"><label for="gore" style="margin:0;color:inherit">I’m 18 or older. Turn on gore.</label></div>
