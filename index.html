@@ -319,7 +319,7 @@ function unban(n){if(!isStaff())return'You are not staff.';if(NET.mode==='client
 const NET={mode:'solo',peer:null,hostConn:null,code:'',banned:{},t1:0,t2:0,seq:0,joined:null};
 // ---- owner key: your device holds a private key; the matching public key is baked in (OWNER_PUB). A host asks every joiner
 // to sign a random challenge, and only the real owner device can. The private key never leaves the device.
-const OWNER_PUB=null,MOD_PUB=null;
+const OWNER_PUB=[{"kty":"EC","crv":"P-256","x":"ky5wUhSc26FFORJQVza7Ors35CXzMhByeIKNMIl1a4Y","y":"rznH3TrRRrTFqZPHFomcvYDbTNVShJT6d0KQdgpuVnU"}],MOD_PUB=null;
 const b64=u=>btoa(String.fromCharCode.apply(null,new Uint8Array(u))),unb=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const subtle=()=>{try{return(self.crypto||window.crypto).subtle||null}catch(e){return null}},EC={name:'ECDSA',namedCurve:'P-256'},SG={name:'ECDSA',hash:'SHA-256'},enc=s=>new TextEncoder().encode(s);
 async function ownerSign(n){const s=subtle();if(!s)return null;try{const j=localStorage.getItem('pfh_k');if(!j)return null;const k=await s.importKey('jwk',JSON.parse(j),EC,false,['sign']);return b64(await s.sign(SG,k,enc(n)))}catch(e){return null}}
