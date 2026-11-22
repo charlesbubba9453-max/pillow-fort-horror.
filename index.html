@@ -220,7 +220,7 @@ const MS=[0,1,2].map(i=>{const sp=i?farSpot():mstart,c=MSTY[i];return Object.ass
 const AH=(m,x,y,z)=>{const c=Math.cos(m.yaw),s=Math.sin(m.yaw);return[m.x+c*x+s*z,y,m.z-s*x+c*z]};
 const taken=(m,t)=>MS.some(o=>o!==m&&o.att&&o.vic===(t.self?'self':t.b));
 function beginAtt(m,v,ty,px,pz){m.att=1;m.at=0;m.bt=0;m.ty=ty;m.rip=0;m.sn1=m.sn2=m.fd=0;m.vic=v;m.v0=[px,pz];m.yaw=Math.atan2(-(px-m.x),-(pz-m.z));m.mode='chase';if(v==='self'){S.grabbed=1;if(typeof buzzAll==='function')buzzAll(1,900)}snd(70,1.2,'sawtooth',.18,40)}
-function startAttack(m,t,ty){if(m.att)return;if(ty===undefined)ty=typeof m.forceTy==='number'?m.forceTy:(R()*3|0);beginAtt(m,t.self?'self':(t.b||null),ty,t.x,t.z);if(NET.mode==='host')netBcast({t:'att',id:t.self?S.id:(t.b&&t.b.id),mi:m.i,ty})}
+function startAttack(m,t,ty){if(m.att)return;if(ty===undefined)ty=typeof m.forceTy==='number'?m.forceTy:(m.cyc=((m.cyc===undefined?m.i:m.cyc)+1)%3);beginAtt(m,t.self?'self':(t.b||null),ty,t.x,t.z);if(NET.mode==='host')netBcast({t:'att',id:t.self?S.id:(t.b&&t.b.id),mi:m.i,ty})}
 function monAnim(m,dt,moving){m.ph+=dt*(moving?7:1.4);const att=!!m.att;m.lean+=((att?0:1.15)-m.lean)*Math.min(1,dt*(att?4:6));
 const u=Math.max(0,m.lean/1.15),Hh=1.1-.2*u,la=Math.acos(Math.min(1,Hh/1.1)),sw=moving&&!att?Math.sin(m.ph):0;
 m.torso.position.set(0,Hh+(moving&&!att?Math.abs(Math.sin(m.ph))*.05*u:0),0);m.torso.rotation.set(-m.lean,0,0);m.head.rotation.set(m.lean*.75,0,m.stun>0?Math.sin(m.ph*9)*.35:0);
@@ -309,7 +309,8 @@ const perm=a==='Ban'&&!sec,until=sec?Date.now()+sec*1000:0;if(a==='Ban'){S.bans=
 if(me){if(a==='Warn'){S.strikes++;showLetter(why)}if(a==='Mute')S.muteT=until;if(a==='Ban'){S.banT=perm?9e15:until;showBan()}}
 else{if(a==='Warn')tb.strikes++;if(a==='Mute')tb.muteT=until;if(a==='Ban'){tb.banT=perm?9e15:until;tb.g.visible=false}
 if(tb.remote&&tb.conn){try{tb.conn.send({t:'mod',a,why,stk:tb.strikes,until,perm})}catch(e){}if(a==='Ban'){NET.banned[tb.name]=perm?9e15:until;setTimeout(()=>{try{tb.conn.close()}catch(e){}},700)}}}
-logIt(`${role}: ${a} → ${me?'You (test)':t} (${why})`);if(rid)S.reports=S.reports.filter(x=>x.id!==rid);return'ok'}
+logIt(`${role}: ${a} → ${me?'You (test)':t} (${why})`);if(rid)S.reports=S.reports.filter(x=>x.id!==rid);
+if(a==='Warn'&&tr==='Player'&&(me?S.strikes:tb.strikes)>=6){if(me)S.strikes=0;else tb.strikes=0;doApply('Server','Owner',t,'Ban',600,'6 warnings: automatic 10 minute ban',null)}return'ok'}
 function doSetRole(byRole,n,r){if(byRole!=='Owner')return'Only the owner can do that.';if(r!=='Moderator'&&r!=='Player')return'Bad role.';if(n===S.name){if(S.role==='Owner')return'That player is the owner.';S.role=r;logIt(`Owner: ${r==='Moderator'?'made':'removed'} ${n} ${r==='Moderator'?'a moderator':'as moderator'}`);return'ok'}const b=bots.find(x=>x.name===n);if(!b)return'Pick a player.';if(b.role==='Owner')return'That player is the owner.';b.role=r;logIt(`Owner: ${r==='Moderator'?'made':'removed'} ${n} ${r==='Moderator'?'a moderator':'as moderator'}`);return'ok'}
 function setRole(n,r){if(S.role!=='Owner')return'Only the owner can do that.';if(NET.mode==='client'){netSend({t:'role',who:n,r});return'sent'}return doSetRole(S.role,n,r)}
 function doUnban(by,role,n){if(RANK[role]<1)return'You are not staff.';const e=S.bans.find(x=>x.name===n);if(!e)return'Not on the ban list.';S.bans=S.bans.filter(x=>x!==e);delete NET.banned[n];
@@ -475,12 +476,13 @@ function xrIn(dt){headPos();if(!S.nc&&!freeP(HX,HZ,.25)){rig.position.x+=okX-HX;
 let L=null,Rt=null;for(const t of CT)if(t.src)(t.src.handedness==='left'?L=t:Rt=t);
 if(L&&vpP.vis&&vpP.mesh.parent!==L.o){L.o.add(vpP.mesh);vpP.mesh.position.set(.17,.216,-.312);vpP.mesh.rotation.set(-.9,0,0)}
 const ry=rig.rotation.y,c=Math.cos(ry),s=Math.sin(ry);let mx=0,mz=0,n=0,jump=0,clg=0,cdy=0,ncl=0;
-if(!S.dead&&!S.grabbed&&!S.banT){for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position,hc=cam.position,vx=hc.x+(p.x-hc.x)*1.6,vy=hc.y+(p.y-hc.y)*1.6,vz=hc.z+(p.z-hc.z)*1.6,grip=!!(b[1]&&b[1].pressed),cl=grip&&climbable(hw(t)),gr=vy<=.25-RY;
+if(!S.dead&&!S.grabbed&&!S.banT){for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position,hc=cam.position,vx=hc.x+(p.x-hc.x)*1.8,vy=hc.y+(p.y-hc.y)*1.8,vz=hc.z+(p.z-hc.z)*1.8,grip=!!(b[1]&&b[1].pressed),rh=hw(t),cl=grip&&climbable(rh),gr=vy<=.3-RY||(ELEV=0,blk(rh[0],rh[2])&&rh[1]-RY<P.y+3);
 // Gorilla-Tag style: touch the ground (or a surface) with a hand and push against it to move. Grip near walls/trees/rocks to climb. Staff no-clip: grip anywhere to swim.
 if(cl||gr||(S.nc&&grip)){if(t.lp){const dx=vx-t.lp[0],dy=vy-t.lp[1],dz=vz-t.lp[2];mx-=dx*c+dz*s;mz-=-dx*s+dz*c;if(dy<0&&gr&&!cl)jump=Math.max(jump,-dy/dt);n++;if(cl){cdy+=dy;ncl++;clg=1;if(!t.cl){t.cl=1;buzz(t,.5,40)}}else{t.cl=0;if(gr&&!t.gc){t.gc=1;buzz(t,.15,20)}}}t.lp=[vx,vy,vz]}else{t.lp=null;t.cl=0;t.gc=0}}
 if(ncl)P.y=Math.max(0,Math.min(3.7,P.y-cdy/ncl*.75));
-if(n){mx*=.85;mz*=.85;const l=Math.hypot(mx,mz),mm=(S.nc?16:8)*dt;if(l>mm){mx*=mm/l;mz*=mm/l}lvx=mx/dt;lvz=mz/dt;if(jump>2.2&&P.on&&!clg)P.vy=Math.min(4.5,jump*.45)}else{const f=Math.exp(-2.6*dt);lvx*=f;lvz*=f;mx=lvx*dt;mz=lvz*dt}
+if(n){const l=Math.hypot(mx,mz),mm=(S.nc?16:10)*dt;if(l>mm){mx*=mm/l;mz*=mm/l}lvx=mx/dt;lvz=mz/dt;if(jump>2.2&&P.on&&!clg)P.vy=Math.min(4.5,jump*.45)}else{const f=Math.exp(-1.8*dt);lvx*=f;lvz*=f;mx=lvx*dt;mz=lvz*dt}
 const hy=headYaw(),fx_=-Math.sin(hy),fz=-Math.cos(hy);
+if(S.nc&&L&&L.src.gamepad&&!S.dead&&!S.grabbed){const a=L.src.gamepad.axes,sx=a[2]||0,sy=a[3]||0;if(Math.hypot(sx,sy)>.15){mx+=(fx_*-sy+Math.cos(hy)*sx)*7*dt;mz+=(fz*-sy-Math.sin(hy)*sx)*7*dt}}
 // no stick walking: you move with your hands (grips). The right stick only turns.
 if(Rt&&Rt.src.gamepad){const a=Rt.src.gamepad.axes;snapCD-=dt;if(S.smooth){if(Math.abs(a[2]||0)>.2)turnRig(-(a[2])*dt*1.9)}else if(Math.abs(a[2]||0)>.7&&snapCD<=0){snapCD=.3;turnRig((a[2]>0?-1:1)*Math.PI/6)}
 if(S.nc)P.y=Math.max(0,P.y-(a[3]||0)*dt*(S.nc?9:4))}}
