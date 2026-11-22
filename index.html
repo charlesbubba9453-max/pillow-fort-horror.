@@ -307,10 +307,10 @@ function doApply(by,role,t,a,sec,why,rid){if(RANK[role]<1)return'You are not sta
 const me=nameOf(t),tb=me?null:bots.find(b=>b.name===t);if(!me&&!tb)return'Pick a player.';const tr=me?S.role:tb.role;if(a==='Ban'&&tr!=='Player')return'Owners and moderators can’t be banned.';if(by!==t&&!(me&&by===S.name)&&RANK[tr]>=RANK[role])return'Can’t act on equal or higher rank.';
 const perm=a==='Ban'&&!sec,until=sec?Date.now()+sec*1000:0;if(a==='Ban'){S.bans=S.bans.filter(x=>x.name!==(me?S.name:t));S.bans.push({name:me?S.name:t,by,why,until:perm?9e15:until})}
 if(me){if(a==='Warn'){S.strikes++;showLetter(why)}if(a==='Mute')S.muteT=until;if(a==='Ban'){S.banT=perm?9e15:until;showBan()}}
-else{if(a==='Warn')tb.strikes++;if(a==='Mute')tb.muteT=until;if(a==='Ban'){tb.banT=perm?9e15:until;tb.g.visible=false}
+else{if(a==='Warn'){tb.strikes++;NET.sm=NET.sm||{};NET.sm[tb.name]=tb.strikes;if(tb.remote&&tb.conn)setTimeout(()=>{try{tb.conn.close()}catch(e){}},25000)}if(a==='Mute')tb.muteT=until;if(a==='Ban'){tb.banT=perm?9e15:until;tb.g.visible=false}
 if(tb.remote&&tb.conn){try{tb.conn.send({t:'mod',a,why,stk:tb.strikes,until,perm})}catch(e){}if(a==='Ban'){NET.banned[tb.name]=perm?9e15:until;setTimeout(()=>{try{tb.conn.close()}catch(e){}},700)}}}
 logIt(`${role}: ${a} → ${me?'You (test)':t} (${why})`);if(rid)S.reports=S.reports.filter(x=>x.id!==rid);
-if(a==='Warn'&&tr==='Player'&&(me?S.strikes:tb.strikes)>=6){if(me)S.strikes=0;else tb.strikes=0;doApply('Server','Owner',t,'Ban',600,'6 warnings: automatic 10 minute ban',null)}return'ok'}
+if(a==='Warn'&&tr==='Player'&&(me?S.strikes:tb.strikes)>=6){if(me)S.strikes=0;else{tb.strikes=0;if(NET.sm)NET.sm[tb.name]=0}doApply('Server','Owner',t,'Ban',600,'6 warnings: automatic 10 minute ban',null)}return'ok'}
 function doSetRole(byRole,n,r){if(byRole!=='Owner')return'Only the owner can do that.';if(r!=='Moderator'&&r!=='Player')return'Bad role.';if(n===S.name){if(S.role==='Owner')return'That player is the owner.';S.role=r;logIt(`Owner: ${r==='Moderator'?'made':'removed'} ${n} ${r==='Moderator'?'a moderator':'as moderator'}`);return'ok'}const b=bots.find(x=>x.name===n);if(!b)return'Pick a player.';if(b.role==='Owner')return'That player is the owner.';b.role=r;logIt(`Owner: ${r==='Moderator'?'made':'removed'} ${n} ${r==='Moderator'?'a moderator':'as moderator'}`);return'ok'}
 function setRole(n,r){if(S.role!=='Owner')return'Only the owner can do that.';if(NET.mode==='client'){netSend({t:'role',who:n,r});return'sent'}return doSetRole(S.role,n,r)}
 function doUnban(by,role,n){if(RANK[role]<1)return'You are not staff.';const e=S.bans.find(x=>x.name===n);if(!e)return'Not on the ban list.';S.bans=S.bans.filter(x=>x!==e);delete NET.banned[n];
@@ -349,7 +349,7 @@ const base=String(d.name||'Player').replace(/[^\w \-]/g,'').slice(0,14)||'Player
 if(d.v!==VER){conn.send({t:'no',why:'Different game version. Ask your friend for the latest file.'});setTimeout(()=>conn.close(),300);return}
 let name=base,n=2;while(name===S.name||bots.some(x=>x.name===name))name=base+n++;
 for(const s of bots.filter(x=>x.sim))dropOther(s);
-b=newOther('c'+(++NET.seq),name,0);b.conn=conn;b.pid=String(d.pid||'').slice(0,60);if(/^#[0-9a-fA-F]{6}$/.test(d.col||'')){b.col=d.col;setCol(b,d.col)}b.x=b.nx=start[0];b.z=b.nz=start[1];conn.send({t:'w',id:b.id,name,role:'Player'});if(OWNER_PUB||MOD_PUB){b.nonce=String(Math.random()).slice(2)+Date.now();conn.send({t:'ch',n:b.nonce})}logIt(name+' joined');return}
+b=newOther('c'+(++NET.seq),name,0);b.conn=conn;b.strikes=(NET.sm&&NET.sm[name])|0;b.pid=String(d.pid||'').slice(0,60);if(/^#[0-9a-fA-F]{6}$/.test(d.col||'')){b.col=d.col;setCol(b,d.col)}b.x=b.nx=start[0];b.z=b.nz=start[1];conn.send({t:'w',id:b.id,name,role:'Player'});if(OWNER_PUB||MOD_PUB){b.nonce=String(Math.random()).slice(2)+Date.now();conn.send({t:'ch',n:b.nonce})}logIt(name+' joined');return}
 if(!b)return;const now=Date.now();
 switch(d.t){
 case'p':if(![d.x,d.y,d.z,d.yaw].every(num))return;b.nx=Math.max(0,Math.min(W*CS,d.x));b.nz=Math.max(0,Math.min(H*CS,d.z));b.ny=Math.max(.2,Math.min(6,d.y));b.nyaw=d.yaw;b.hl=hand(d.hl);b.hr=hand(d.hr);
@@ -378,7 +378,7 @@ case'ch':if(typeof d.n==='string'&&d.n.length<80)ownerSign(d.n).then(s=>{if(s)ne
 case's':onSnap(d);break;
 case'att':{const m=MS[d.mi|0];if(!m||m.att)break;const v=d.id===S.id?'self':bots.find(b=>b.id===d.id)||null,px=v==='self'?HX:v?v.x:m.x,pz=v==='self'?HZ:v?v.z:m.z;beginAtt(m,v,(d.ty|0)%3,px,pz);break}
 case'k':if(d.id===S.id)killSelf(d.x,d.z);else goreAt(d.x,d.z);break;
-case'mod':if(d.a==='Warn'){S.strikes=d.stk;showLetter(d.why)}if(d.a==='Mute')S.muteT=d.until;if(d.a==='Ban'){S.banT=d.perm?9e15:d.until;showBan()}break;
+case'mod':if(d.a==='Warn'){S.strikes=d.stk;S.warnKick=1;showLetter(d.why)}if(d.a==='Mute')S.muteT=d.until;if(d.a==='Ban'){S.banT=d.perm?9e15:d.until;showBan()}break;
 case'res':ST.m=d.m;msg(d.m);if(vpP.vis)drawP();break}}
 function onSnap(d){const seen={};for(const q of d.p){const id=q[0];if(id===S.id){S.role=q[8];S.strikes=q[12];S.score=q[11];continue}seen[id]=1;let b=bots.find(x=>x.id===id);if(!b){b=newOther(id,q[1],0);b.x=b.nx=q[2];b.z=b.nz=q[4]}
 b.pid=d.pi&&d.pi[id]||b.pid;b.name=q[1];b.nx=q[2];b.ny=q[3];b.nz=q[4];b.nyaw=q[5];b.hl=q[6];b.hr=q[7];b.role=q[8];b.badge=q[9];b.inv=q[10];b.score=q[11];b.strikes=q[12];b.muted=q[13];b.nc=q[14];b.dead=q[15];if(q[16]&&q[16]!==b.col){b.col=q[16];setCol(b,q[16])}}
@@ -387,7 +387,8 @@ d.m.forEach((q,i)=>{const m=MS[i];if(!m)return;m.tx=q[0];m.tz=q[1];m.mode=q[2]?'
 const open=new Set(d.d);for(const k in doors)doors[k].t=open.has(k)?1:0;
 const keep=new Set();for(const[k,hp]of d.pl){keep.add(k);const p=S.pill.get(k);if(p){if(hp<p.hp)p.m.scale.setScalar(.75);p.hp=hp}else{const q=k.split(',').map(Number);addPillow(q[0],q[1],hp)}}
 for(const k of[...S.pill.keys()])if(!keep.has(k))delPillow(k,1);if(d.rp)S.reports=d.rp;if(d.bl)S.bans=d.bl}
-function onHostGone(){NET.mode='solo';for(const b of bots.slice())if(b.remote)dropOther(b);S.role='Player';S.reports=[];showMenu('The host left the game. You are playing solo now.')}
+function onHostGone(){const w=S.warnKick;S.warnKick=0;NET.mode='solo';for(const b of bots.slice())if(b.remote)dropOther(b);S.role='Player';S.reports=[];S.grabbed=0;showMenu(w?'You were warned and removed from the game. You can rejoin.':'The host left the game. You are playing solo now.')}
+function kickOut(){const c=NET.hostConn,p=NET.peer;NET.hostConn=null;NET.peer=null;NET.mode='solo';try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}onHostGone()}
 function netTick(dt){if(NET.mode==='host'){NET.t1+=dt;if(NET.t1>=.1){NET.t1=0;hostSnap()}}else if(NET.mode==='client'){NET.t2+=dt;if(NET.t2>=.066){NET.t2=0;netSend(Object.assign({t:'p'},myPose()))}}}
 
 // ---------- panels (screens you can tap): drawn on a canvas, shown on the page or floating in VR
@@ -428,7 +429,7 @@ tx(c,ST.m||'Hold right trigger + point at a player to select',14,490,14,'#9fe0b0
 function drawL(o,c){const ban=S.letter&&S.letter.k==='ban';rr(c,0,0,o.w,o.h,12,ban?'#2a1014':'#f3e7c8');c.lineWidth=6;c.strokeStyle=ban?'#a02030':'#a8905a';c.stroke();
 tx(c,ban?'YOU HAVE BEEN BANNED':'OFFICIAL WARNING',o.w/2,64,34,ban?'#ff5a6a':'#7a1f2b','center');
 if(ban){wrap(c,S.banT>=9e15?'A moderator banned you permanently.':'A moderator banned you until '+new Date(S.banT).toLocaleTimeString()+'.',34,120,o.w-68,34,24,'#fbb')}
-else{const y=wrap(c,'Dear player, you have been warned by a moderator.',34,120,o.w-68,32,22,'#3a2f1a');wrap(c,'Reason: '+((S.letter&&S.letter.why)||'rule violation')+'.  Warnings so far: '+S.strikes+'. Breaking the rules again can lead to a mute or ban.',34,y+8,o.w-68,32,22,'#3a2f1a');bt(o,o.w/2-110,o.h-76,220,52,'I understand',()=>showVP(vpL,0),'#7a1f2b',22)}}
+else{const y=wrap(c,'Dear player, you have been warned by a moderator.',34,120,o.w-68,32,22,'#3a2f1a');wrap(c,'Reason: '+((S.letter&&S.letter.why)||'rule violation')+'.  Warnings so far: '+S.strikes+'. Breaking the rules again can lead to a mute or ban.'+(NET.mode==='client'?' After you tap the button you will be removed from the game, but you can rejoin.':''),34,y+8,o.w-68,32,22,'#3a2f1a');bt(o,o.w/2-110,o.h-76,220,52,'I understand',()=>{showVP(vpL,0);if(NET.mode==='client'&&S.warnKick)kickOut()},'#7a1f2b',22)}}
 const vpB=mkVP('vpB',460,500,1,drawB),vpR=mkVP('vpR',360,420,.8,drawR),vpP=mkVP('vpP',360,600,.34,drawPhone),vpL=mkVP('vpL',520,380,.9,drawL);
 function drawBL(o,c){bg(o,c,'BAN LOG');const now=Date.now(),l=S.bans.filter(x=>x.until>now).slice(0,6);if(!l.length)tx(c,'No active bans',o.w/2,120,22,'#9aa','center');let y=64;
 for(const e of l){rr(c,10,y,o.w-20,62,10,'#1d2030');tx(c,e.name.slice(0,14),20,y+26,21,'#fff');const left=e.until>=9e15?'permanent':Math.ceil((e.until-now)/60000)+' min left';tx(c,'by '+String(e.by).slice(0,10)+' · '+left,20,y+50,14,'#f3b6cf');bt(o,o.w-120,y+10,100,42,'Unban',()=>{ST.m=unban(e.name);msg(ST.m==='ok'?'Unbanned '+e.name:ST.m)},'#2a6a45',18);y+=68}}
