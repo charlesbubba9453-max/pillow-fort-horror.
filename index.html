@@ -34,7 +34,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E use computer / pick up plush, Tab leaderboard, P phone<br>VR: touch the ground or a wall with a hand and push to move, push off to launch (phone: switch to Stick walking, Reach, Fast/Moon). Right stick turns. Grip grabs plush toys, A near the computer to code. Walk into the DOWN hole to go underground (monsters!). Stairs UP are in the underground green plaza.</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 19 · real Gorilla Tag arm movement from your APK · phone: Stick / Reach / Normal-Fast-Moon</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 20 · long reach by default so you can touch the floor · phone: Stick / Reach / Normal-Fast-Moon</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -430,7 +430,7 @@ bt(o,14,200,106,46,'Warn',()=>act('Warn'),'#8a6a1a',20);bt(o,127,200,106,46,'Mut
 const tg=(x,y,l,k,fn)=>bt(o,x,y,162,38,l+': '+(k?'ON':'off'),fn,k?'#2a6a45':'#3a3f5c',16);
 tg(14,256,'Invisible',S.inv,()=>S.inv=S.inv?0:1);tg(184,256,isStaff()?'No-clip':'No-clip (staff)',S.nc,()=>{if(isStaff())S.nc=S.nc?0:1});tg(14,300,'ESP',S.esp,()=>S.esp=S.esp?0:1);tg(184,300,'Night vision',S.bright,()=>{S.bright=S.bright?0:1;applyNight()});
 tg(14,344,'Shield badge',S.badge,()=>S.badge=S.badge?0:1);
-bt(o,14,388,106,38,'Stick: '+(S.stick?'ON':'off'),()=>{S.stick=S.stick?0:1;gtReset();msg(S.stick?'Stick walking':'Hand movement')},S.stick?'#2a6a45':'#3a3f5c',15);bt(o,127,388,106,38,'Reach: '+(S.longArms?'long':'real'),()=>{S.longArms=S.longArms?0:1},S.longArms?'#2a6a45':'#3a3f5c',15);bt(o,240,388,106,38,GTP[S.mv||0].n+' ▸',()=>{S.mv=((S.mv||0)+1)%GTP.length},'#2a3550',15);
+bt(o,14,388,106,38,'Stick: '+(S.stick?'ON':'off'),()=>{S.stick=S.stick?0:1;gtReset();msg(S.stick?'Stick walking':'Hand movement')},S.stick?'#2a6a45':'#3a3f5c',15);bt(o,127,388,106,38,'Reach: '+(S.longArms?'long':'normal'),()=>{S.longArms=S.longArms?0:1},S.longArms?'#2a6a45':'#3a3f5c',15);bt(o,240,388,106,38,GTP[S.mv||0].n+' ▸',()=>{S.mv=((S.mv||0)+1)%GTP.length},'#2a3550',15);
 const tb=bots.find(b=>b.name===ST.tgt),isM=tb&&tb.role==='Moderator';bt(o,184,344,162,38,isM?'Remove mod':'Make mod',()=>{ST.m=setRole(ST.tgt,isM?'Player':'Moderator');if(ST.m==='ok'||ST.m==='sent')ST.m=(isM?'Removed mod: ':'Made mod: ')+ST.tgt;msg(ST.m)},S.role==='Owner'?'#5a3a8a':'#2a2a33',16);
 tx(c,'Reports ('+S.reports.length+')',14,454,17,'#ff9aa8');const r=S.reports[0];
 if(r){tx(c,(r.by+' → '+r.who).slice(0,30),14,478,16,'#fff');tx(c,r.why,14,498,14,'#aab');bt(o,190,462,76,40,'Select',()=>{ST.tgt=r.who;const i=RE.indexOf(r.why);if(i>=0)ST.ri=i},'#2a5a8a',15);bt(o,272,462,74,40,'Dismiss',()=>{if(NET.mode==='client')netSend({t:'dismiss',rid:r.id});S.reports=S.reports.filter(x=>x.id!==r.id)},'#555',15)}else tx(c,'No reports',14,478,15,'#778');
@@ -691,9 +691,10 @@ it.m.position.set(it.x,it.y,it.z);if(it.held&&it.held!=='desk')it.m.rotation.y+=
 mirrorPass(dt)}
 // ---------- Gorilla Tag arm locomotion (ported from the template's GorillaLocomotion: hand sticks to what it touches, push off to launch)
 const GTP=[{n:'Normal',jm:1.1,mj:6.5,gs:1},{n:'Fast',jm:1.5,mj:9,gs:1},{n:'Moon',jm:1.1,mj:6.5,gs:.4}];
-const GT={hist:[],hi:0,lh:[null,null],was:[0,0],q0:null,launch:null,prevT:0},HAND_R=.09,ARM_MAX=1.5,VEL_HIST=6,VEL_LIMIT=.3;
+S.longArms=1;
+const GT={hist:[],hi:0,lh:[null,null],was:[0,0],q0:null,launch:null,prevT:0},HAND_R=.12,ARM_MAX=1.5,VEL_HIST=6,VEL_LIMIT=.3;
 function gtReset(){GT.lh=[null,null];GT.was=[0,0];GT.q0=null;GT.hist.length=0;GT.hi=0;GT.launch=null;GT.prevT=0}
-function gtHand(t){const w=hw(t),k=S.longArms?1.9:1,mx_=ARM_MAX*(S.longArms?1.6:1);let rx=(w[0]-HX)*k,ry=(w[1]-HY)*k,rz=(w[2]-HZ)*k;const l=Math.hypot(rx,ry,rz);if(l>mx_){rx*=mx_/l;ry*=mx_/l;rz*=mx_/l}return[HX+rx,HY+ry,HZ+rz]}
+function gtHand(t){const w=hw(t),k=S.longArms?1.8:1,mx_=ARM_MAX*(S.longArms?1.6:1);let rx=(w[0]-HX)*k,ry=(w[1]-HY)*k,rz=(w[2]-HZ)*k;const l=Math.hypot(rx,ry,rz);if(l>mx_){rx*=mx_/l;ry*=mx_/l;rz*=mx_/l}return[HX+rx,HY+ry,HZ+rz]}
 const handHit=(p,m)=>{if(p[0]<=0||p[0]>=120||p[2]<=0||p[2]>=120)return false;const r=HAND_R+(m||0);let h=0;for(const d of[[0,0],[r,0],[-r,0],[0,r],[0,-r]])h=Math.max(h,surfH(p[0]+d[0],p[2]+d[1]));return p[1]<=h+r};
 function gtLoco(dt,L,Rt){const pr=GTP[S.mv||0],hs=[L,Rt],first=[[0,0,0],[0,0,0]],hit=[0,0],cur=[null,null];
 for(let i=0;i<2;i++){const t=hs[i];if(!t){GT.lh[i]=null;GT.was[i]=0;continue}
