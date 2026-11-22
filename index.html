@@ -33,7 +33,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E door, F pillow, G throw pillow, Tab leaderboard, P phone (staff)<br>VR: touch the ground with your hands and push to walk (like Gorilla Tag) · left trigger at belly = pillow (flick to throw it at the monster to stun it) · grab walls, rocks, trees to climb · hold right trigger to point · X once = leaderboard, twice = phone · Y = mic on/off</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">Build with pillows. Don’t get caught by the Stitcher.</p>
+<h1>PILLOW FORT HORROR</h1><p class="sub">Build with pillows. Don’t get caught by the Stitcher.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 8 · no staff room · bans on phone · 3 monsters</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -580,4 +580,4 @@ ren.render(scene,cam)}
 drawSign();ren.setAnimationLoop(tick);
 
 
-</script><script>if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{})</script></body></html>
+</script></body></html>
