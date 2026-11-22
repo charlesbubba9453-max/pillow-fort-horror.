@@ -37,8 +37,10 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
-<div class="row" style="margin-top:12px"><button id="bHost" style="background:#7a1f2b">Host a room</button><button id="bSolo">Play solo</button></div>
+<div class="row" style="margin-top:12px"><button id="bQuick" style="background:#1f6b3a">Quick Play (public room)</button></div>
+<div class="row" style="margin-top:8px"><button id="bHost" style="background:#7a1f2b">Host a room</button><button id="bSolo">Play solo</button></div>
 <label for="jc">Or join a friend (friends join as Players)</label>
+<div class="row" style="margin-top:6px"><button id="bKey" style="font-size:12px;padding:6px 10px">Owner key</button></div><div id="keyBox" style="display:none"><textarea id="keyOut" readonly rows="4" style="width:100%;font-size:11px"></textarea><div id="keyMsg" style="font-size:12px"></div></div>
 <div class="row"><input id="jc" type="text" maxlength="6" placeholder="ROOM CODE" autocomplete="off"><button id="bJoin">Join</button></div>
 <div class="gr"><label for="col" style="margin:0;color:inherit">Shirt color</label> <input id="col" type="color" value="#c0392b"></div>
 <div class="gr"><input id="sm" type="checkbox"><label for="sm" style="margin:0;color:inherit">Smooth turning (VR)</label></div>
@@ -49,7 +51,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 window.__err=[];function __show(){var n=document.getElementById('note');if(n)n.textContent='The game hit an error: '+window.__err.join(' | ')+'  (send me this text)'}
 addEventListener('error',function(e){window.__err.push((e.message||'error')+' [line '+e.lineno+']');__show()});
 addEventListener('unhandledrejection',function(e){window.__err.push(String((e.reason&&e.reason.message)||e.reason));__show()});
-['bSolo','bHost','bJoin'].forEach(function(i){document.getElementById(i).onclick=function(){var n=document.getElementById('note');n.textContent=window.__err.length?('The game failed to load: '+window.__err.join(' | ')):(window.THREE?'Still loading… try again in a moment.':'The 3D library did not load. This page may be blocking it, or you are offline.')}});
+['bSolo','bHost','bJoin','bQuick','bKey'].forEach(function(i){document.getElementById(i).onclick=function(){var n=document.getElementById('note');n.textContent=window.__err.length?('The game failed to load: '+window.__err.join(' | ')):(window.THREE?'Still loading… try again in a moment.':'The 3D library did not load. This page may be blocking it, or you are offline.')}});
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -288,7 +290,8 @@ if(me){if(a==='Warn'){S.strikes++;showLetter(why)}if(a==='Mute')S.muteT=until;if
 else{if(a==='Warn')tb.strikes++;if(a==='Mute')tb.muteT=until;if(a==='Ban'){tb.banT=perm?9e15:until;tb.g.visible=false}
 if(tb.remote&&tb.conn){try{tb.conn.send({t:'mod',a,why,stk:tb.strikes,until,perm})}catch(e){}if(a==='Ban'){NET.banned[tb.name]=perm?9e15:until;setTimeout(()=>{try{tb.conn.close()}catch(e){}},700)}}}
 logIt(`${role}: ${a} → ${me?'You (test)':t} (${why})`);if(rid)S.reports=S.reports.filter(x=>x.id!==rid);return'ok'}
-function setRole(n,r){if(S.role!=='Owner')return'Only the owner can do that.';const b=bots.find(x=>x.name===n);if(!b)return'Pick a player.';if(b.role==='Owner')return'That player is the owner.';b.role=r;logIt(`Owner: ${r==='Moderator'?'made':'removed'} ${n} ${r==='Moderator'?'a moderator':'as moderator'}`);return'ok'}
+function doSetRole(byRole,n,r){if(byRole!=='Owner')return'Only the owner can do that.';if(r!=='Moderator'&&r!=='Player')return'Bad role.';if(n===S.name){if(S.role==='Owner')return'That player is the owner.';S.role=r;logIt(`Owner: ${r==='Moderator'?'made':'removed'} ${n} ${r==='Moderator'?'a moderator':'as moderator'}`);return'ok'}const b=bots.find(x=>x.name===n);if(!b)return'Pick a player.';if(b.role==='Owner')return'That player is the owner.';b.role=r;logIt(`Owner: ${r==='Moderator'?'made':'removed'} ${n} ${r==='Moderator'?'a moderator':'as moderator'}`);return'ok'}
+function setRole(n,r){if(S.role!=='Owner')return'Only the owner can do that.';if(NET.mode==='client'){netSend({t:'role',who:n,r});return'sent'}return doSetRole(S.role,n,r)}
 function doUnban(by,role,n){if(RANK[role]<1)return'You are not staff.';const e=S.bans.find(x=>x.name===n);if(!e)return'Not on the ban list.';S.bans=S.bans.filter(x=>x!==e);delete NET.banned[n];
 if(nameOf(n)){S.banT=0;if(typeof showVP==='function')showVP(vpL,0)}const tb=bots.find(b=>b.name===n);if(tb){tb.banT=0}logIt(role+': unbanned '+n);return'ok'}
 function unban(n){if(!isStaff())return'You are not staff.';if(NET.mode==='client'){netSend({t:'unban',name:n});return'sent'}return doUnban(S.name,S.role,n)}
@@ -296,16 +299,25 @@ function unban(n){if(!isStaff())return'You are not staff.';if(NET.mode==='client
 // ---------- multiplayer: peer-to-peer (PeerJS). The host is the referee: it runs the monster, the doors,
 // the pillows, scores and all moderation. Everyone else sends requests and draws what the host says.
 const NET={mode:'solo',peer:null,hostConn:null,code:'',banned:{},t1:0,t2:0,seq:0,joined:null};
+// ---- owner key: your device holds a private key; the matching public key is baked in (OWNER_PUB). A host asks every joiner
+// to sign a random challenge, and only the real owner device can. The private key never leaves the device.
+const OWNER_PUB=null;
+const b64=u=>btoa(String.fromCharCode.apply(null,new Uint8Array(u))),unb=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const subtle=()=>{try{return(self.crypto||window.crypto).subtle||null}catch(e){return null}},EC={name:'ECDSA',namedCurve:'P-256'},SG={name:'ECDSA',hash:'SHA-256'},enc=s=>new TextEncoder().encode(s);
+async function ownerSign(n){const s=subtle();if(!s)return null;try{const j=localStorage.getItem('pfh_k');if(!j)return null;const k=await s.importKey('jwk',JSON.parse(j),EC,false,['sign']);return b64(await s.sign(SG,k,enc(n)))}catch(e){return null}}
+async function ownerVerify(n,sig){const s=subtle();if(!s||!OWNER_PUB)return false;try{for(const pk of[].concat(OWNER_PUB)){try{const k=await s.importKey('jwk',pk,EC,false,['verify']);if(await s.verify(SG,k,unb(sig),enc(n)))return true}catch(e){}}return false}catch(e){return false}}
+async function ownerSelf(){const n=String(Math.random()),sg=await ownerSign(n);return sg?ownerVerify(n,sg):false}
+async function ownerPubText(){const s=subtle();if(!s)return'';try{let j=localStorage.getItem('pfh_k');if(!j){const kp=await s.generateKey(EC,true,['sign','verify']);j=JSON.stringify(await s.exportKey('jwk',kp.privateKey));localStorage.setItem('pfh_k',j)}const p=JSON.parse(j);return JSON.stringify({kty:p.kty,crv:p.crv,x:p.x,y:p.y})}catch(e){return''}}
 const HANDS={l:null,r:null};
 const netSend=o=>{try{NET.hostConn&&NET.hostConn.send(o)}catch(e){}};
 const netBcast=o=>{if(NET.mode!=='host')return;for(const b of bots)if(b.remote&&b.conn){try{b.conn.send(o)}catch(e){}}};
 const CODEC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',mkCode=()=>Array.from({length:5},()=>CODEC[R()*CODEC.length|0]).join('');
 function myPose(){return{x:r2(HX),y:r2(HY),z:r2(HZ),yaw:r2(fwdYaw()),hl:HANDS.l,hr:HANDS.r,inv:S.inv?1:0,badge:S.badge,nc:S.nc?1:0}}
-function startHosting(done){if(typeof Peer==='undefined')return done(null,'The multiplayer library didn’t load.');let tries=0,fin=0;
-const attempt=()=>{const code=mkCode();let p;try{p=new Peer('pfh-'+code)}catch(e){return done(null,'Couldn’t start multiplayer.')}
+function startHosting(done,fixed){if(typeof Peer==='undefined')return done(null,'The multiplayer library didn’t load.');let tries=0,fin=0;
+const attempt=()=>{const code=fixed||mkCode();let p;try{p=new Peer('pfh-'+code)}catch(e){return done(null,'Couldn’t start multiplayer.')}
 const to=setTimeout(()=>{if(!fin){fin=1;try{p.destroy()}catch(e){}done(null,'Couldn’t reach the matchmaking server.')}},9000);
 p.on('open',()=>{if(fin)return;fin=1;clearTimeout(to);NET.peer=p;NET.code=code;p.on('connection',hostConn);done(code)});
-p.on('error',e=>{if(fin)return;clearTimeout(to);if(e.type==='unavailable-id'&&tries++<4)return attempt();fin=1;done(null,'Couldn’t start a room ('+e.type+').')})};attempt()}
+p.on('error',e=>{if(fin)return;clearTimeout(to);if(e.type==='unavailable-id'&&fixed){fin=1;return done(null,'TAKEN')}if(e.type==='unavailable-id'&&tries++<4)return attempt();fin=1;done(null,'Couldn’t start a room ('+e.type+').')})};attempt()}
 function hostConn(conn){conn.on('data',d=>hostMsg(conn,d));conn.on('close',()=>{const b=bots.find(x=>x.conn===conn);if(b){logIt(b.name+' left');dropOther(b)}});conn.on('error',()=>{})}
 const num=v=>typeof v==='number'&&isFinite(v),hand=h=>Array.isArray(h)&&h.length===3&&h.every(num)?h:null;
 function hostMsg(conn,d){if(!d||typeof d!=='object')return;let b=bots.find(x=>x.conn===conn);
@@ -314,11 +326,13 @@ const base=String(d.name||'Player').replace(/[^\w \-]/g,'').slice(0,14)||'Player
 if(d.v!==VER){conn.send({t:'no',why:'Different game version. Ask your friend for the latest file.'});setTimeout(()=>conn.close(),300);return}
 let name=base,n=2;while(name===S.name||bots.some(x=>x.name===name))name=base+n++;
 for(const s of bots.filter(x=>x.sim))dropOther(s);
-b=newOther('c'+(++NET.seq),name,0);b.conn=conn;b.pid=String(d.pid||'').slice(0,60);if(/^#[0-9a-fA-F]{6}$/.test(d.col||'')){b.col=d.col;setCol(b,d.col)}b.x=b.nx=start[0];b.z=b.nz=start[1];conn.send({t:'w',id:b.id,name,role:'Player'});logIt(name+' joined');return}
+b=newOther('c'+(++NET.seq),name,0);b.conn=conn;b.pid=String(d.pid||'').slice(0,60);if(/^#[0-9a-fA-F]{6}$/.test(d.col||'')){b.col=d.col;setCol(b,d.col)}b.x=b.nx=start[0];b.z=b.nz=start[1];conn.send({t:'w',id:b.id,name,role:'Player'});if(OWNER_PUB){b.nonce=String(Math.random()).slice(2)+Date.now();conn.send({t:'ch',n:b.nonce})}logIt(name+' joined');return}
 if(!b)return;const now=Date.now();
 switch(d.t){
 case'p':if(![d.x,d.y,d.z,d.yaw].every(num))return;b.nx=Math.max(0,Math.min(W*CS,d.x));b.nz=Math.max(0,Math.min(H*CS,d.z));b.ny=Math.max(.2,Math.min(6,d.y));b.nyaw=d.yaw;b.hl=hand(d.hl);b.hr=hand(d.hr);
 const st=b.role!=='Player';b.inv=st&&d.inv?1:0;b.nc=st&&d.nc?1:0;b.badge=d.badge?1:0;break;
+case'sig':{const nn=b.nonce;if(!nn||typeof d.s!=='string'||d.s.length>400)return;b.nonce=null;ownerVerify(nn,d.s).then(ok=>{if(ok&&bots.includes(b)){b.role='Owner';logIt(b.name+' is the Owner')}});break}
+case'role':{const r=doSetRole(b.role,String(d.who).slice(0,14),d.r);if(r!=='ok')conn.send({t:'res',m:r});break}
 case'place':hostPlace(d.gx|0,d.gz|0,{x:b.x,z:b.z});break;
 case'stun':if(now-(b.lastStun||0)<1000||Math.hypot(b.x-M.x,b.z-M.z)>14||M.att)return;b.lastStun=now;M.stun=2.2;break
 case'door':{const dd=doors[d.k];if(!dd||(dd.staff&&b.role==='Player')||Math.hypot(dd.cx-b.x,dd.cz-b.z)>4.5)return;dd.t=dd.t?0:1;creak();if(dd.t)noise(dd.cx,dd.cz,16);break}
@@ -330,13 +344,14 @@ function snapBase(){const nw=Date.now(),ps=[['h',S.name,r2(HX),r2(HY),r2(HZ),r2(
 for(const b of bots)if(b.remote)ps.push([b.id,b.name,r2(b.x),r2(b.y),r2(b.z),r2(b.yaw),b.hl,b.hr,b.role,b.badge,b.inv,b.score|0,b.strikes,b.muteT>nw?1:0,b.nc,b.dead?1:0,b.col||'']);
 return{t:'s',p:ps,pi:Object.assign({h:NET.peer?NET.peer.id:''},...bots.filter(b=>b.remote&&b.pid).map(b=>({[b.id]:b.pid}))),m:[r2(M.x),r2(M.z),M.mode==='chase'?1:0,r2(M.yaw),M.moving?1:0],d:Object.keys(doors).filter(k=>doors[k].t),pl:[...S.pill].map(([k,p])=>[k,p.hp])}}
 function hostSnap(){const s=snapBase();for(const b of bots)if(b.remote&&b.conn){try{b.conn.send(b.role!=='Player'?Object.assign({},s,{rp:S.reports,bl:S.bans}):s)}catch(e){}}}
-function joinGame(code,name,done){if(typeof Peer==='undefined')return done('The multiplayer library didn’t load.');let fin=0;const finish=e=>{if(fin)return;fin=1;clearTimeout(to);NET.joined=null;done(e)};let p;try{p=new Peer()}catch(e){return done('Couldn’t start multiplayer.')}
+function joinGame(code,name,done){if(typeof Peer==='undefined')return done('The multiplayer library didn’t load.');let fin=0;const finish=e=>{if(fin)return;fin=1;clearTimeout(to);NET.joined=null;if(e){try{p.destroy()}catch(x){}NET.peer=null;NET.hostConn=null}done(e)};let p;try{p=new Peer()}catch(e){return done('Couldn’t start multiplayer.')}
 const to=setTimeout(()=>{if(!fin){fin=1;try{p.destroy()}catch(e){}done('Couldn’t find that room. Check the code.')}},12000);NET.joined=finish;
 p.on('error',e=>finish(e.type==='peer-unavailable'?'No room with that code.':'Couldn’t connect ('+e.type+').'));
-p.on('open',()=>{const c=p.connect('pfh-'+code,{reliable:true});NET.peer=p;NET.hostConn=c;c.on('open',()=>c.send({t:'hello',name,v:VER,pid:p.id,col:S.col}));c.on('data',clientMsg);c.on('close',()=>{if(NET.mode==='client')onHostGone();else finish('The host closed the connection.')});c.on('error',()=>{})})}
+p.on('open',()=>{const c=p.connect('pfh-'+code,{reliable:true});NET.peer=p;NET.hostConn=c;c.on('open',()=>c.send({t:'hello',name,v:VER,pid:p.id,col:S.col}));c.on('data',clientMsg);c.on('close',()=>{if(NET.hostConn!==c&&NET.mode!=='solo')return;if(NET.mode==='client')onHostGone();else finish('The host closed the connection.')});c.on('error',()=>{})})}
 function clientMsg(d){if(!d||typeof d!=='object')return;switch(d.t){
 case'w':S.id=d.id;S.name=d.name;S.role=d.role;NET.joined&&NET.joined(null);break;
 case'no':NET.joined&&NET.joined(d.why);break;
+case'ch':if(typeof d.n==='string'&&d.n.length<80)ownerSign(d.n).then(s=>{if(s)netSend({t:'sig',s})});break;
 case's':onSnap(d);break;
 case'att':{if(M.att)break;const v=d.id===S.id?'self':bots.find(b=>b.id===d.id)||null;M.att=1;M.at=0;M.bt=0;M.vic=v;const px=v==='self'?HX:v?v.x:M.x,pz=v==='self'?HZ:v?v.z:M.z;M.v0=[px,pz];M.yaw=Math.atan2(-(px-M.x),-(pz-M.z));if(v==='self'){S.grabbed=1;buzzAll(1,900)}snd(70,1.2,'sawtooth',.18,40);break}
 case'k':if(d.id===S.id)killSelf(d.x,d.z);else goreAt(d.x,d.z);break;
@@ -383,7 +398,7 @@ bt(o,14,200,106,46,'Warn',()=>act('Warn'),'#8a6a1a',20);bt(o,127,200,106,46,'Mut
 const tg=(x,y,l,k,fn)=>bt(o,x,y,162,38,l+': '+(k?'ON':'off'),fn,k?'#2a6a45':'#3a3f5c',16);
 tg(14,256,'Invisible',S.inv,()=>S.inv=S.inv?0:1);tg(184,256,'No-clip',S.nc,()=>S.nc=S.nc?0:1);tg(14,300,'ESP',S.esp,()=>S.esp=S.esp?0:1);tg(184,300,'Night vision',S.bright,()=>{S.bright=S.bright?0:1;applyNight()});
 tg(14,344,'Shield badge',S.badge,()=>S.badge=S.badge?0:1);
-const tb=bots.find(b=>b.name===ST.tgt),isM=tb&&tb.role==='Moderator';bt(o,184,344,162,38,isM?'Remove mod':'Make mod',()=>{ST.m=setRole(ST.tgt,isM?'Player':'Moderator');if(ST.m==='ok')ST.m=(isM?'Removed mod: ':'Made mod: ')+ST.tgt;msg(ST.m)},S.role==='Owner'?'#5a3a8a':'#2a2a33',16);
+const tb=bots.find(b=>b.name===ST.tgt),isM=tb&&tb.role==='Moderator';bt(o,184,344,162,38,isM?'Remove mod':'Make mod',()=>{ST.m=setRole(ST.tgt,isM?'Player':'Moderator');if(ST.m==='ok'||ST.m==='sent')ST.m=(isM?'Removed mod: ':'Made mod: ')+ST.tgt;msg(ST.m)},S.role==='Owner'?'#5a3a8a':'#2a2a33',16);
 tx(c,'Reports ('+S.reports.length+')',14,414,17,'#ff9aa8');const r=S.reports[0];
 if(r){tx(c,(r.by+' → '+r.who).slice(0,30),14,438,16,'#fff');tx(c,r.why,14,458,14,'#aab');bt(o,190,422,76,40,'Select',()=>{ST.tgt=r.who;const i=RE.indexOf(r.why);if(i>=0)ST.ri=i},'#2a5a8a',15);bt(o,272,422,74,40,'Dismiss',()=>{if(NET.mode==='client')netSend({t:'dismiss',rid:r.id});S.reports=S.reports.filter(x=>x.id!==r.id)},'#555',15)}else tx(c,'No reports',14,438,15,'#778');
 tx(c,ST.m||'Hold right trigger + point at a player to select',14,490,14,'#9fe0b0');let y=514;for(const l of S.log){tx(c,l.slice(0,40),14,y,12,'#889');y+=18}}
@@ -490,7 +505,7 @@ for(const b of bots){if(!b.pid||b.sim)continue;if(!VOICE.calls[b.pid]&&NET.peer.
 const a=VOICE.aud[b.pid];if(a){const d=Math.hypot(b.x-HX,b.z-HZ),v=d<4?1:Math.max(0,1-(d-4)/26);a.volume=(S.mutedMe.has(b.name)||b.muted||b.muteT>now||b.banT>now)?0:v}}}
 $('bMic').onclick=toggleMic;
 // ---------- menu / start
-const setNote=t=>{$('note').textContent=t;try{$('menu').scrollTop=0}catch(e){}};const busy=b=>{for(const i of['bHost','bJoin','bSolo'])$(i).disabled=!!b};
+const setNote=t=>{$('note').textContent=t;try{$('menu').scrollTop=0}catch(e){}};const busy=b=>{for(const i of['bHost','bJoin','bSolo','bQuick'])$(i).disabled=!!b};
 addEventListener('error',e=>{if(!started)setNote('Error: '+(e.message||'something broke')+'. Tell me this message.')});
 addEventListener('unhandledrejection',e=>{if(!started)setNote('Error: '+((e.reason&&e.reason.message)||e.reason||'something broke'))});
 function simBots(){for(const n of['Mira','Jax','Pip']){const b=newOther('s'+n,n,1);b.x=start[0]+(R()-.5)*10;b.z=start[1]-2-R()*6;b.yaw=R()*6;b.score=(R()*40)|0}}
@@ -498,8 +513,15 @@ function beginGame(mode){NET.mode=mode;if(mode!=='solo')startVoice();started=tru
 if(S.role==='Owner'||S.role==='Moderator')msg('You are '+S.role+'. Tap X twice for your staff phone.')}
 function showMenu(t){started=false;for(const v of VPS)showVP(v,0);$('hud').style.display='none';$('menu').style.display='flex';setNote(t||'');try{const s=ren.xr.getSession&&ren.xr.getSession();s&&s.end()}catch(e){}}
 function pre(){S.name=($('nm').value||'Player').replace(/[^\w \-]/g,'').slice(0,14)||'Player';S.gore=$('gore').checked?1:0;S.smooth=$('sm')&&$('sm').checked?1:0;S.col=($('col')&&$('col').value)||'#c0392b';try{localStorage.setItem('pfh_n',S.name);localStorage.setItem('pfh_r',$('rs').value);localStorage.setItem('pfh_c',S.col);localStorage.setItem('pfh_s',S.smooth?'1':'0')}catch(e){}}
+$('bQuick').onclick=()=>{pre();busy(1);let tries=0;const fail=m=>{busy(0);setNote(m)};
+const go=n=>{if(n>12)return fail('All public rooms are busy. Try again in a moment.');setNote('Looking for a room… ('+n+')');S.role='Player';
+joinGame('pub-'+n,S.name,err=>{if(!err){busy(0);return beginGame('client')}
+if(err==='The room is full.')return go(n+1);
+if(err==='No room with that code.'){ownerSelf().then(ok=>{S.role=ok?'Owner':'Player';S.id='h';startHosting((code,e2)=>{if(code){busy(0);return beginGame('host')}if(e2==='TAKEN'&&tries++<3)return go(n);fail((e2||'')+' Multiplayer may be blocked. You can still play solo.')},'pub-'+n)});return}
+fail(err)})};go(1)};
 $('bSolo').onclick=()=>{pre();S.role=$('rs').value;S.id='h';beginGame('solo')};
 $('bHost').onclick=()=>{pre();S.role=$('rs').value;S.id='h';setNote('Opening your room… (up to 10 seconds)');busy(1);startHosting((code,err)=>{busy(0);if(!code)return setNote(err+' Multiplayer may be blocked on this page. You can still play solo.');beginGame('host')})};
+$('bKey').onclick=()=>{ownerPubText().then(t=>{$('keyOut').value=t||'This browser can’t make a key.';$('keyBox').style.display='block';try{navigator.clipboard.writeText(t)}catch(e){}ownerSelf().then(ok=>{$('keyMsg').textContent=OWNER_PUB?(ok?'This device is the game Owner.':'This device is NOT the Owner.'):'Send this text to Claude to lock it in as the Owner key.'})})};
 $('bJoin').onclick=()=>{pre();const c=($('jc').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.length<4)return setNote('Type your friend’s 5-letter room code.');S.role='Player';setNote('Connecting… (up to 12 seconds)');busy(1);joinGame(c,S.name,err=>{busy(0);if(err)return setNote(err);beginGame('client')})};
 try{const n=localStorage.getItem('pfh_n');if(n)$('nm').value=n;const r=localStorage.getItem('pfh_r');if(r&&/^(Owner|Moderator|Player)$/.test(r))$('rs').value=r;const c=localStorage.getItem('pfh_c');if(c&&/^#[0-9a-fA-F]{6}$/.test(c))$('col').value=c;if(localStorage.getItem('pfh_s')==='1')$('sm').checked=true}catch(e){}
 // ---------- main loop
