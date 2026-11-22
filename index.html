@@ -33,7 +33,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E door, F pillow, G throw pillow, Tab leaderboard, P phone (staff)<br>VR: touch the ground with your hands and push to walk (like Gorilla Tag), or hold a grip and swing your arm · left trigger at belly = pillow (flick to throw it at the monster to stun it) · grab walls, rocks, trees to climb · hold right trigger to point · X once = leaderboard, twice = phone · Y = mic on/off</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">Build with pillows. Don’t get caught by the Stitcher.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 9 · no staff room · bans on phone · 3 monsters · easier hand movement</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">Build with pillows. Don’t get caught by the Stitcher.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 10 · no block placing · no staff room · bans on phone · 3 monsters · easier hand movement</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -301,8 +301,8 @@ function addPillow(gx,gz,hp){const k=gx+','+gz;if(S.pill.has(k))return;const m=n
 function delPillow(k,poof){const p=S.pill.get(k);if(!p)return;if(poof)burst(p.m.position.x,.5,p.m.position.z,10,'w');scene.remove(p.m);S.pill.delete(k)}
 function hit(k,dt){const p=S.pill.get(k);if(!p)return;p.cd-=dt;if(p.cd>0)return;p.cd=.6;p.hp--;p.m.scale.setScalar(.75);snd(120,.15,'sine',.1);if(p.hp<=0){delPillow(k,1);snd(300,.1,'square',.05)}}
 function canPlace(gx,gz,by){const c=ch(gx>>1,gz>>1);if(!'.PM'.includes(c)||S.pill.has(gx+','+gz))return 0;const bx=by?by.x:HX,bz=by?by.z:HZ;return Math.hypot(gx+.5-bx,gz+.5-bz)>=.9}
-function hostPlace(gx,gz,by){if(!canPlace(gx,gz,by))return 0;addPillow(gx,gz);if(S.pill.size>60){const f=S.pill.keys().next().value;delPillow(f)}snd(200,.12,'sine',.08);return 1}
-function placePillow(gx,gz){if(S.dead||!started)return 0;if(!canPlace(gx,gz)){msg('Can’t place a pillow there');return 0}if(NET.mode==='client'){netSend({t:'place',gx,gz});return 1}return hostPlace(gx,gz)}
+function hostPlace(gx,gz,by){return 0;if(!canPlace(gx,gz,by))return 0;addPillow(gx,gz);if(S.pill.size>60){const f=S.pill.keys().next().value;delPillow(f)}snd(200,.12,'sine',.08);return 1}
+function placePillow(gx,gz){return 0;if(S.dead||!started)return 0;if(!canPlace(gx,gz)){msg('Can’t place a pillow there');return 0}if(NET.mode==='client'){netSend({t:'place',gx,gz});return 1}return hostPlace(gx,gz)}
 function fwdYaw(){return typeof ren!=='undefined'&&ren.xr.isPresenting?headYaw():P.yaw}
 function place(){placePillow(Math.floor(HX-Math.sin(fwdYaw())*1.6),Math.floor(HZ-Math.cos(fwdYaw())*1.6))}
 function use(){if(S.dead||!started)return;let b=null,bk=null,bd=2.8;for(const k in doors){const d=doors[k],L=Math.hypot(d.cx-HX,d.cz-HZ);if(L<bd){bd=L;b=d;bk=k}}
@@ -504,7 +504,7 @@ for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad;if(!gp)continue;cons
 if(t===L){if(edge(t,5,b)===1)toggleMic();const x=edge(t,4,b);if(x===1){const now=performance.now();if(now-lastX<350){clearTimeout(xTimer);lastX=-1e9;if(isStaff())showVP(vpP,!vpP.vis)}else{lastX=now;clearTimeout(xTimer);xTimer=setTimeout(()=>showVP(vpB,!vpB.vis),350)}}
 const tr=edge(t,0,b),h=hw(t);{const k=Math.min(1,dt*14);if(t.ph){const nv=[(h[0]-t.ph[0])/dt,(h[1]-t.ph[1])/dt,(h[2]-t.ph[2])/dt];t.hv=t.hv?t.hv.map((q,i)=>q+(nv[i]-q)*k):nv}t.ph=h}const bx=HX-Math.sin(headYaw())*.2,bz=HZ-Math.cos(headYaw())*.2;
 if(tr===1&&!holding&&Math.hypot(h[0]-bx,h[1]-(HY-.6),h[2]-bz)<.4&&!S.dead){holding=1;snd(260,.1,'sine',.06)}
-if(tr===-1&&holding){holding=0;const v=t.hv||[0,0,0];if(Math.hypot(v[0],v[1],v[2])>2.4)throwPillow(h,v);else{placePillow(Math.floor(h[0]),Math.floor(h[2]));buzz(t,.4,50)}}}
+if(tr===-1&&holding){holding=0;const v=t.hv||[0,0,0];if(Math.hypot(v[0],v[1],v[2])>2.4)throwPillow(h,v);else{buzz(t,.2,30)}}}
 else{const a=edge(t,4,b);if(a===1)use();const tr=edge(t,0,b);
 if(tr===1){const pr=panelRay(t);if(pr)hitVP(pr.vp,pr.x,pr.y);else aimOn=1}
 if(tr===-1&&aimOn){aimOn=0;const bb=aimBot;aimBot=null;if(bb){if(isStaff()){ST.tgt=bb.name;showVP(vpP,1);msg('Selected '+bb.name)}else{ST.rep=bb.name;showVP(vpR,1)}}}}}
@@ -512,7 +512,7 @@ lineM.visible=false;
 if(Rt){const o=hw(Rt),d=hd(Rt);if(aimOn){const f=aimFind(o,d);aimBot=f?f[0]:null;const e=f?f[1]:12;setLine(o,[o[0]+d[0]*e,o[1]+d[1]*e,o[2]+d[2]*e],f?'#ff4a5a':'#66ccff')}else{const pr=panelRay(Rt);if(pr)setLine(o,pr.pt,'#66ccff')}}
 // pouch & held pillow
 const hy=headYaw();pouch.visible=!S.dead;pouch.position.set(HX-Math.sin(hy)*.2,HY-.6,HZ-Math.cos(hy)*.2);pouch.rotation.y=hy;
-heldM.visible=ghost.visible=false;if(holding&&L){const h=hw(L);heldM.visible=true;heldM.position.set(h[0],h[1],h[2]);const gx=Math.floor(h[0]),gz=Math.floor(h[2]);ghost.visible=true;ghost.position.set(gx+.5,.5,gz+.5);ghost.material.color.set(canPlace(gx,gz)?0x44ff99:0xff4a5a)}
+heldM.visible=ghost.visible=false;if(holding&&L){const h=hw(L);heldM.visible=true;heldM.position.set(h[0],h[1],h[2]);const gx=Math.floor(h[0]),gz=Math.floor(h[2]);ghost.visible=false;ghost.material.color.set(canPlace(gx,gz)?0x44ff99:0xff4a5a)}
 HANDS.l=L?hw(L).map(r2):null;HANDS.r=Rt?hw(Rt).map(r2):null;headPos()}
 // ---------- desktop input
 function deskIn(dt){const k=KEYS,f=(k.KeyW?1:0)-(k.KeyS?1:0),r=(k.KeyD?1:0)-(k.KeyA?1:0),sp=(k.ShiftLeft?5:3)*(k.KeyC?.5:1)*(S.nc?2.4:1),sy=Math.sin(P.yaw),cy=Math.cos(P.yaw);
