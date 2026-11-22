@@ -34,7 +34,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E use computer / pick up plush, Tab leaderboard, P phone<br>VR: touch the ground or a wall with a hand and push to move, push off to launch (phone: switch to Stick walking, Reach, Fast/Moon). Right stick turns. Grip grabs plush toys, A near the computer to code. Walk into the DOWN hole to go underground (monsters!). Stairs UP are in the underground green plaza.</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 26 · hands-only movement · lowered legless gorillas · poop</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 27 · enclosed maze underground · shop room · no houses</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -60,9 +60,9 @@ addEventListener('unhandledrejection',function(e){window.__err.push(String((e.re
 'use strict';
 const VER=4,W=60,H=60,CS=2,SW=W*2,SH=H*2,D4=[[1,0],[-1,0],[0,1],[0,-1]],$=i=>document.getElementById(i),R=Math.random,TAU=Math.PI*2;
 const RAMP={x0:77,x1:81,z0:56,z1:70,ze:72,d:3.2};let FLY=0;const rampY=(x,z)=>x>=RAMP.x0&&x<=RAMP.x1&&z>=RAMP.z0&&z<=RAMP.ze?-RAMP.d*Math.min(1,(z-RAMP.z0)/(RAMP.z1-RAMP.z0)):0;
-const ARM=1.6,BH=1.1,PLZ={x0:48,z0:92,x1:72,z1:116},CAB={x0:38,z0:34,x1:68,z1:50},LOBBY={x0:48,z0:50,x1:74,z1:72},SURF={x0:36,z0:30,x1:82,z1:82};
+const ARM=1.6,BH=1.1,PLZ={x0:48,z0:92,x1:72,z1:116},CAB={x0:38,z0:34,x1:68,z1:50},LOBBY={x0:48,z0:50,x1:74,z1:72},SURF={x0:36,z0:30,x1:82,z1:82},SHR={x0:28,z0:92,x1:46,z1:116};
 const GT_HANDS=false,PHONE_ALL=true,phoneOK=()=>PHONE_ALL||S.role!=='Player';
-const inR=(r,x,z)=>x>=r.x0&&x<=r.x1&&z>=r.z0&&z<=r.z1,inSafe=(x,z)=>inR(PLZ,x,z)||inR(CAB,x,z)||inR(LOBBY,x,z),inCab=(x,z)=>inR(CAB,x,z);
+const inR=(r,x,z)=>x>=r.x0&&x<=r.x1&&z>=r.z0&&z<=r.z1,inSafe=(x,z)=>inR(PLZ,x,z)||inR(SHR,x,z)||inR(CAB,x,z)||inR(LOBBY,x,z),inCab=(x,z)=>inR(CAB,x,z);
 const RANK={Player:0,Moderator:1,Owner:2},RE=['Harassment','Inappropriate language','Cheating','Griefing','Other rule violation'];
 const TL=[['5 min',300],['30 min',1800],['1 hour',3600],['1 day',86400],['7 days',604800],['Permanent',0]];
 const S={role:'Player',name:'Player',id:'me',gore:0,strikes:0,muteT:0,banT:0,inv:0,nc:0,esp:0,bright:0,badge:1,dead:0,letter:0,score:0,pill:new Map(),mutedMe:new Set(),friends:new Set(),reports:[],log:[],lastRep:0,vr:0,note:'',bans:[]};
@@ -79,19 +79,25 @@ let tt;function msg(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clea
 function fx(c,t){const e=$('fx');e.style.background=c||'transparent';e.textContent=t||'';e.style.opacity=c?1:0}
 // ---------- map (same for everyone: generated from a fixed seed)
 function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-const HOUSES=[[6,6,15,13,[10,13],['v',11,9]],[22,4,31,10,[26,10]],[40,6,52,14,[40,10],['v',46,8]],[5,24,14,31,[14,26],['h',28,9]],[45,24,54,32,[45,26],['h',28,50]],[8,40,17,48,[12,40],['v',13,44]]];
-const MAP=(()=>{const r=rng(20241121),g=Array.from({length:H},()=>Array(W).fill('.'));
-for(let x=0;x<W;x++)g[0][x]=g[H-1][x]='#';for(let z=0;z<H;z++)g[z][0]=g[z][W-1]='#';
-const box=(x0,z0,x1,z1)=>{for(let x=x0;x<=x1;x++)g[z0][x]=g[z1][x]='#';for(let z=z0;z<=z1;z++)g[z][x0]=g[z][x1]='#'};
-for(const h of HOUSES){box(h[0],h[1],h[2],h[3]);g[h[4][1]][h[4][0]]='D';const p=h[5];if(p){if(p[0]==='v'){for(let z=h[1]+1;z<h[3];z++)g[z][p[1]]='#';g[p[2]][p[1]]='D'}else{for(let x=h[0]+1;x<h[2];x++)g[p[1]][x]='#';g[p[1]][p[2]]='D'}}}
-const inH=(x,z,m)=>HOUSES.some(h=>x>=h[0]-m&&x<=h[2]+m&&z>=h[1]-m&&z<=h[3]+m);
-const skip=(x,z)=>inH(x,z,1)||(x>=15&&x<=43&&z>=12&&z<=43)||(x>=22&&x<=38&&z>=47&&z<=59)||(Math.abs(x-50)<=3&&Math.abs(z-50)<=3);
-let n=0;for(let i=0;i<900&&n<120;i++){const x=1+(r()*(W-2)|0),z=1+(r()*(H-2)|0);if(g[z][x]!=='.'||skip(x,z))continue;g[z][x]='r';n++}
+const HOUSES=[];
+const MAP=(()=>{const r=rng(20241121),g=Array.from({length:H},()=>Array(W).fill('#'));
+// underground = one big enclosed maze. nodes sit on odd cells; the yard (surface), the safe plaza and the shop room are carved separately
+const inYard=(x,z)=>x>=16&&x<=42&&z>=13&&z<=42,inRes=(x,z)=>x>=13&&x<=37&&z>=45&&z<=58,okN=(x,z)=>x>=1&&x<=57&&z>=1&&z<=57&&!inYard(x,z)&&!inRes(x,z);
+const seen=new Set(),key=(x,z)=>x+','+z,st=[[1,1]];seen.add(key(1,1));g[1][1]='.';
+while(st.length){const[x,z]=st[st.length-1],nb=[[2,0],[-2,0],[0,2],[0,-2]].filter(d=>okN(x+d[0],z+d[1])&&!seen.has(key(x+d[0],z+d[1])));
+if(!nb.length){st.pop();continue}const d=nb[(r()*nb.length)|0],nx=x+d[0],nz=z+d[1];g[z+d[1]/2][x+d[0]/2]='.';g[nz][nx]='.';seen.add(key(nx,nz));st.push([nx,nz])}
+// a few extra openings so it is not one long tree
+for(let k=0;k<70;k++){const x=1+((r()*28)|0)*2,z=1+((r()*28)|0)*2,d=r()<.5?[2,0]:[0,2];if(okN(x,z)&&okN(x+d[0],z+d[1])&&seen.has(key(x,z))&&seen.has(key(x+d[0],z+d[1])))g[z+d[1]/2][x+d[0]/2]='.'}
+// safe plaza (cells 24..35 x 46..57) and the separate shop room (cells 14..22 x 46..57)
+for(let z=46;z<=57;z++){for(let x=24;x<=35;x++)g[z][x]='.';for(let x=14;x<=22;x++)g[z][x]='.'}
+for(const z of[50,51,52])g[z][23]='.';
+for(let x=36;x<=38;x++)g[51][x]='.';for(let z=43;z<=45;z++)g[z][29]='.';
 // the surface: a walled dirt yard (cells 17..41 x 14..41) with the staff room inside; nothing else on it
+for(let z=13;z<=42;z++)for(let x=16;x<=42;x++)g[z][x]='#';
 for(let z=14;z<=41;z++)for(let x=17;x<=41;x++)g[z][x]='.';
 for(let x=17;x<=41;x++)g[14][x]=g[41][x]='#';for(let z=14;z<=41;z++)g[z][17]=g[z][41]='#';
 for(let x=19;x<=33;x++){g[17][x]='#';g[24][x]='#'}for(let z=17;z<=24;z++){g[z][19]='#';g[z][33]='#'}g[24][26]='.';g[24][27]='.';
-g[33][30]='P';g[53][29]='U';g[50][50]='M';return g})();
+g[33][30]='P';g[53][29]='U';g[51][51]='M';g[51][51]='M';return g})();
 const OBST=[];
 const ch=(cx,cz)=>(MAP[cz]&&MAP[cz][cx])||'#';
 const doors={};
@@ -103,7 +109,7 @@ const pk=(x,z)=>Math.floor(x)+','+Math.floor(z);
 S.pill=new Map();
 const solid=(x,z)=>blk(x,z)||(ELEV<1.05&&S.pill.has(pk(x,z)));
 const free=(x,z,r)=>!(solid(x-r,z-r)||solid(x+r,z-r)||solid(x-r,z+r)||solid(x+r,z+r));
-const walk=(sx,sz,mon)=>{const cx=sx>>1,cz=sz>>1,c=ch(cx,cz);if(c==='#'||c==='T'||c==='r')return false;if(inCab((cx+.5)*CS,(cz+.5)*CS))return false;if(mon&&inR(PLZ,(cx+.5)*CS,(cz+.5)*CS))return false;if(mon&&inR(SURF,(cx+.5)*CS,(cz+.5)*CS))return false;return true};
+const walk=(sx,sz,mon)=>{const cx=sx>>1,cz=sz>>1,c=ch(cx,cz);if(c==='#'||c==='T'||c==='r')return false;if(inCab((cx+.5)*CS,(cz+.5)*CS))return false;if(mon&&(inR(PLZ,(cx+.5)*CS,(cz+.5)*CS)||inR(SHR,(cx+.5)*CS,(cz+.5)*CS)))return false;if(mon&&inR(SURF,(cx+.5)*CS,(cz+.5)*CS))return false;return true};
 const rnd=mon=>{for(;;){const x=(R()*SW)|0,z=(R()*SH)|0;if(walk(x,z,mon))return[x+.5,z+.5]}};
 function step(fx,fz,tx,tz,mon){const s=Math.floor(fx)+Math.floor(fz)*SW,t=Math.floor(tx)+Math.floor(tz)*SW;if(s===t)return null;const pv=new Int16Array(SW*SH).fill(-1),q=[s];pv[s]=s;
 for(let i=0;i<q.length&&pv[t]<0;i++){const n=q[i],x=n%SW,z=(n/SW)|0;for(const[dx,dz]of D4){const nx=x+dx,nz=z+dz;if(nx<0||nz<0||nx>=SW||nz>=SH||!walk(nx,nz,mon))continue;const k=nx+nz*SW;if(pv[k]<0){pv[k]=n;q.push(k)}}}
@@ -599,13 +605,14 @@ drawSign();ren.setAnimationLoop(tick);
 // ---------- restart: dirt lobby (safe zone), couch, computer you can code on, mirror door to the staff room, plush monkeys
 const box=(w,h,d,col,x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:col}));m.position.set(x,y,z);scene.add(m);return m};
 // safe zones: the lobby on the surface and the plaza underground (green outline + sign + light)
-for(const Z of[LOBBY,PLZ]){const m=new THREE.MeshBasicMaterial({color:0x44ff99,transparent:true,opacity:.6}),add=(w,d,x,z)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,.05,d),m);b.position.set(x,.05,z);scene.add(b)};
+for(const Z of[LOBBY,PLZ,SHR]){const m=new THREE.MeshBasicMaterial({color:0x44ff99,transparent:true,opacity:.6}),add=(w,d,x,z)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,.05,d),m);b.position.set(x,.05,z);scene.add(b)};
 const w=Z.x1-Z.x0,d=Z.z1-Z.z0,cx=(Z.x0+Z.x1)/2,cz=(Z.z0+Z.z1)/2;add(w,.25,cx,Z.z0);add(w,.25,cx,Z.z1);add(.25,d,Z.x0,cz);add(.25,d,Z.x1,cz);
-const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,1),new THREE.MeshBasicMaterial({map:signTex('SAFE ZONE','#44ff99'),side:THREE.DoubleSide}));sg.position.set(cx,Z===PLZ?2.6:3.4,Z.z0+.4);scene.add(sg);
-const pl=new THREE.PointLight(0xffd9a0,1.1,40);pl.position.set(cx,Z===PLZ?2.8:4,cz);scene.add(pl)}
+const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,1),new THREE.MeshBasicMaterial({map:signTex('SAFE ZONE','#44ff99'),side:THREE.DoubleSide}));sg.position.set(cx,Z!==LOBBY?2.6:3.4,Z.z0+.4);scene.add(sg);
+if(Z!==SHR){const pl=new THREE.PointLight(0xffd9a0,1.1,40);pl.position.set(cx,Z===PLZ?2.8:4,cz);scene.add(pl)}}
 // underground: stone floor, dark ceiling, stairs DOWN in the lobby and stairs UP in the underground plaza
-{const stone=new THREE.MeshLambertMaterial({map:tileT});pad(0,0,59,14,stone);pad(0,41,59,59,stone);pad(0,15,17,40,stone);pad(41,15,59,40,stone);
-const ceil=new THREE.MeshLambertMaterial({color:0x1c1612});for(const[x0,z0,x1,z1]of[[0,0,120,30],[0,82,120,120],[0,30,36,82],[82,30,120,82]]){const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,.3,z1-z0),ceil);m.position.set((x0+x1)/2,3.55,(z0+z1)/2);scene.add(m)}}
+{const ceil=new THREE.MeshLambertMaterial({color:0x2a1c12});for(const[x0,z0,x1,z1]of[[0,0,120,30],[0,82,120,120],[0,30,36,82],[82,30,120,82]]){const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,.3,z1-z0),ceil);m.position.set((x0+x1)/2,3.55,(z0+z1)/2);scene.add(m)}}
+{const lamps=[];for(let z=1;z<H-1;z++)for(let x=1;x<W-1;x++)if(MAP[z][x]==='.'&&!(x>=16&&x<=42&&z>=13&&z<=42)&&Math.random()<.035){const d=[[1,0],[-1,0],[0,1],[0,-1]].find(d=>MAP[z+d[1]][x+d[0]]==='#');if(d)lamps.push([(x+.5)*CS+d[0]*(CS/2-.08),(z+.5)*CS+d[1]*(CS/2-.08),Math.random()<.5])}
+const lg=new THREE.BoxGeometry(.3,.3,.3),mk2=(col,arr)=>{const im=new THREE.InstancedMesh(lg,new THREE.MeshBasicMaterial({color:col}),Math.max(1,arr.length)),o=new THREE.Object3D();arr.forEach((q,i)=>{o.position.set(q[0],2.2,q[1]);o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.count=arr.length;scene.add(im)};mk2(0xff2a2a,lamps.filter(q=>q[2]));mk2(0x33ff55,lamps.filter(q=>!q[2]))}
 const UPS={x:66,z:100},RTOP={x:79,z:53};
 function stairs(P_,col,label,lcol){const pit=new THREE.Mesh(new THREE.PlaneGeometry(2.4,2.4),new THREE.MeshBasicMaterial({color:col===0xff4a5a?0x000000:0x1a2a1a}));pit.rotation.x=-Math.PI/2;pit.position.set(P_.x,.04,P_.z);scene.add(pit);
 const rm=new THREE.MeshBasicMaterial({color:col});for(const[w,d,dx,dz]of[[2.6,.12,0,-1.25],[2.6,.12,0,1.25],[.12,2.6,-1.25,0],[.12,2.6,1.25,0]]){const b=new THREE.Mesh(new THREE.BoxGeometry(w,.08,d),rm);b.position.set(P_.x+dx,.06,P_.z+dz);scene.add(b)}
@@ -622,22 +629,24 @@ OBST.push([RAMP.x0-.45,RAMP.x0,RAMP.z0,RAMP.ze+.5,5],[RAMP.x1,RAMP.x1+.45,RAMP.z
 for(let k=0;k<6;k++){const a=new THREE.Mesh(new THREE.PlaneGeometry(.9,.9),new THREE.MeshBasicMaterial({color:0xff2a3a,transparent:true,opacity:.55,side:THREE.DoubleSide}));a.rotation.x=-Math.PI/2;a.position.set(cx,.03+(-RAMP.d*(k+.5)/6)*0,RAMP.z0+1+k*1.4);if(0)scene.add(a)}
 const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,1.1),new THREE.MeshBasicMaterial({map:signTex('DOWN ▼ MONSTERS','#ff6a7a','#12141c',512,140,56),side:THREE.DoubleSide}));sg.position.set(cx,3,RAMP.z0-.3);scene.add(sg);box(.2,3,.2,0x2a2a30,RAMP.x0-.3,1.5,RAMP.z0-.3);box(.2,3,.2,0x2a2a30,RAMP.x1+.3,1.5,RAMP.z0-.3);
 const rl=new THREE.PointLight(0xff2a3a,1.4,16);rl.position.set(cx,-1.2,RAMP.z1);scene.add(rl);const rl2=new THREE.PointLight(0xff3a4a,.9,10);rl2.position.set(cx,1.5,RAMP.z0+1);scene.add(rl2)}
-// scary underground shop (north side of the green plaza)
-const SHOP={x:57,z:97};let shopL,shopEyes=[],shopNear=0;
-{const cx=SHOP.x,bk=93.2;pad(24,46,34,48,new THREE.MeshLambertMaterial({color:0x2a0a0e}),.03);
-box(15,6,.5,0x16090b,cx,3,92.4);box(.5,6,7,0x16090b,cx-7.5,3,95.6);box(.5,6,7,0x16090b,cx+7.5,3,95.6);box(15.5,.4,7.6,0x0e0608,cx,5.9,95.8);
+// scary underground shop: its own big room west of the plaza, reached through the wide opening in the plaza's west wall
+const SHOP={x:37,z:97};let shopL,shopEyes=[],shopNear=0;
+{const cx=SHOP.x,bk=93.2,ph=3.2;pad(14,46,22,57,new THREE.MeshLambertMaterial({color:0x2a0a0e}),.03);
+box(.3,ph,6.5,0x16090b,cx-7.8,ph/2,95.6);box(.3,ph,6.5,0x16090b,cx+7.8,ph/2,95.6);OBST.push([cx-7.95,cx-7.65,92,99,4],[cx+7.65,cx+7.95,92,99,4]);box(15.9,.2,.4,0x0e0608,cx,ph,92.4);
 box(8,1.1,1,0x3a1a10,cx,.55,SHOP.z);box(8.4,.12,1.3,0x5a2a1a,cx,1.15,SHOP.z);OBST.push([cx-4.2,cx+4.2,SHOP.z-.65,SHOP.z+.65,1.2]);
-for(const sx of[-5.2,-2.6,0,2.6,5.2]){box(2,.1,.5,0x2a1a12,cx+sx,1.4,bk);box(2,.1,.5,0x2a1a12,cx+sx,2.5,bk);box(2,.1,.5,0x2a1a12,cx+sx,3.6,bk);
-for(let r=0;r<3;r++){const jar=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.4,8),new THREE.MeshBasicMaterial({color:[0x66ff66,0xff5577,0x88aaff][(r+(sx>0?1:0))%3]}));jar.position.set(cx+sx-.5+(r%2)*.9,1.65+((sx*7|0)&1)*0+0,bk);scene.add(jar);const j2=jar.clone();j2.position.y=2.75;scene.add(j2)}}
+for(const sx of[-5.2,-2.6,0,2.6,5.2]){box(2,.1,.5,0x2a1a12,cx+sx,1.3,bk);box(2,.1,.5,0x2a1a12,cx+sx,2.3,bk);
+for(let r=0;r<3;r++){const col=[0x66ff66,0xff5577,0x88aaff][(r+(sx>0?1:0))%3];for(const yy of[1.5,2.5]){const jar=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.4,8),new THREE.MeshBasicMaterial({color:col}));jar.position.set(cx+sx-.5+(r%2)*.9,yy,bk);scene.add(jar)}}}
 const skm=new THREE.MeshLambertMaterial({color:0xe8e2cc});
-for(let k=0;k<7;k++){const s=new THREE.Mesh(new THREE.SphereGeometry(.24,10,8),skm);s.position.set(cx-6+k*2,4.8,92.8);scene.add(s);for(const ex of[-.09,.09]){const e=new THREE.Mesh(new THREE.SphereGeometry(.06,6,5),new THREE.MeshBasicMaterial({color:0x000000}));e.position.set(cx-6+k*2+ex,4.82,93.04);scene.add(e)}}
-const sg=new THREE.Mesh(new THREE.PlaneGeometry(7,1.6),new THREE.MeshBasicMaterial({map:signTex('THE CRYPT SHOP','#ff3a4a','#0c0406',768,176,86),side:THREE.DoubleSide}));sg.position.set(cx,5.2,97.5-.1);sg.position.z=99.1;sg.position.y=5;scene.add(sg);box(.15,1.2,.15,0x2a1a12,cx-3.4,5.8,99.1);box(.15,1.2,.15,0x2a1a12,cx+3.4,5.8,99.1);
-// the shopkeeper: tall dark figure with glowing eyes
-const keep=new THREE.Group(),dm=new THREE.MeshLambertMaterial({color:0x0a0a0e});const body=new THREE.Mesh(new THREE.CylinderGeometry(.35,.6,2.3,8),dm);body.position.y=1.15;const hd=new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),dm);hd.position.y=2.55;hd.scale.set(1,1.25,1);keep.add(body,hd);
-for(const ex of[-.13,.13]){const e=new THREE.Mesh(new THREE.SphereGeometry(.06,6,5),new THREE.MeshBasicMaterial({color:0xff1a1a}));e.position.set(ex,2.62,.28);keep.add(e);shopEyes.push(e)}
-const mo=new THREE.Mesh(new THREE.BoxGeometry(.3,.05,.04),new THREE.MeshBasicMaterial({color:0xff1a1a}));mo.position.set(0,2.4,.31);keep.add(mo);keep.position.set(cx,0,95);keep.rotation.y=0;scene.add(keep);
-for(let k=0;k<5;k++){const ch=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,2.4,4),new THREE.MeshBasicMaterial({color:0x555560}));ch.position.set(cx-6+k*3,4.6,98.6);scene.add(ch)}
-shopL=new THREE.PointLight(0xff2020,1.6,16);shopL.position.set(cx,3,96);scene.add(shopL);const sl2=new THREE.PointLight(0x66ff88,.6,8);sl2.position.set(cx,2,94);scene.add(sl2)}
+for(let k=0;k<7;k++){const s=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),skm);s.position.set(cx-6+k*2,2.95,92.8);scene.add(s);for(const ex of[-.08,.08]){const e=new THREE.Mesh(new THREE.SphereGeometry(.05,6,5),new THREE.MeshBasicMaterial({color:0x000000}));e.position.set(cx-6+k*2+ex,2.97,93.0);scene.add(e)}}
+const sg=new THREE.Mesh(new THREE.PlaneGeometry(6.4,1.2),new THREE.MeshBasicMaterial({map:signTex('THE CRYPT SHOP','#ff3a4a','#0c0406',768,144,80),side:THREE.DoubleSide}));sg.position.set(cx,2.7,99.1);scene.add(sg);box(.12,.9,.12,0x2a1a12,cx-3.1,3.0,99.1);box(.12,.9,.12,0x2a1a12,cx+3.1,3.0,99.1);
+const keep=new THREE.Group(),dm=new THREE.MeshLambertMaterial({color:0x0a0a0e});const body=new THREE.Mesh(new THREE.CylinderGeometry(.3,.5,2.0,8),dm);body.position.y=1.0;const hd=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),dm);hd.position.y=2.3;hd.scale.set(1,1.25,1);keep.add(body,hd);
+for(const ex of[-.12,.12]){const e=new THREE.Mesh(new THREE.SphereGeometry(.055,6,5),new THREE.MeshBasicMaterial({color:0xff1a1a}));e.position.set(ex,2.36,.25);keep.add(e);shopEyes.push(e)}
+const mo=new THREE.Mesh(new THREE.BoxGeometry(.28,.05,.04),new THREE.MeshBasicMaterial({color:0xff1a1a}));mo.position.set(0,2.15,.28);keep.add(mo);keep.position.set(cx,0,95);scene.add(keep);
+// coffins, candles and red banners around the room
+for(const[x,z,r]of[[30.5,105,.3],[43.5,105,-.3],[30.5,111,0],[43.5,111,0]]){const c=box(1,.7,2.2,0x2a1810,x,.35,z);c.rotation.y=r;OBST.push([x-.9,x+.9,z-1.2,z+1.2,.7])}
+for(const[x,z]of[[31,100],[43,100],[33,113],[41,113],[37,108]]){box(.12,.5,.12,0xe8dcc0,x,.25,z);const f=new THREE.Mesh(new THREE.SphereGeometry(.07,6,5),new THREE.MeshBasicMaterial({color:0xffa030}));f.position.set(x,.58,z);scene.add(f)}
+for(const x of[31,37,43]){const b=new THREE.Mesh(new THREE.PlaneGeometry(.9,2),new THREE.MeshBasicMaterial({color:0x7a0f1a,side:THREE.DoubleSide}));b.position.set(x,1.9,115.6);scene.add(b)}
+shopL=new THREE.PointLight(0xff2020,1.6,18);shopL.position.set(cx,2.6,100);scene.add(shopL)}
 // couch (faces the spawn)
 {const CX=61,CZ=67;box(3,.3,1.1,0x4a1f2b,CX,.3,CZ);box(1.4,.2,.9,0x7a3347,CX-.72,.55,CZ-.05);box(1.4,.2,.9,0x7a3347,CX+.72,.55,CZ-.05);box(3.1,.85,.3,0x5b2636,CX,.85,CZ+.5);box(.3,.65,1.1,0x5b2636,CX-1.45,.62,CZ);box(.3,.65,1.1,0x5b2636,CX+1.45,.62,CZ)}
 // computer desk
@@ -724,7 +733,7 @@ if(heldItem&&heldItem.held==='desk'){heldItem.held=0;heldItem.vx=heldItem.vz=0;h
 if(slapNearest())return true;
 const it=itemNear(HX,HY-.4,HZ,2.4);if(it){it.held='desk';heldItem=it;return true}return false}
 let compNear=0,stairCD=0;
-function extraFrame(dt){const now=performance.now();for(let i=POOPS.length-1;i>=0;i--){const p=POOPS[i];p.t+=dt;if(p.m.position.y>.06){p.vy-=9.5*dt;p.m.position.y=Math.max(.06,p.m.position.y+p.vy*dt)}if(p.t>25){scene.remove(p.m);POOPS.splice(i,1)}}anT_-=dt;if(anT_<=0){anT_=.8;drawAn();if(Math.hypot(HX-BRD.x,HZ-BRD.z)<14)paint(vpW)}vpW.mesh.visible=true;if(vrNow())vpW.vis=1;{const ug=!inR(SURF,HX,HZ),k=Math.min(1,dt*2),f=scene.fog;const tc=ug?[.03,.07,.04]:[.07,.04,.025],tn=ug?2:10,tf=ug?30:85;f.color.r+=(tc[0]-f.color.r)*k;f.color.g+=(tc[1]-f.color.g)*k;f.color.b+=(tc[2]-f.color.b)*k;f.near+=(tn-f.near)*k;f.far+=(tf-f.far)*k;scene.background.copy(f.color)}if(shopL){shopL.intensity=1.2+Math.sin(now*.013)*.3+(Math.random()<.06?-.9:0);const near=Math.hypot(HX-SHOP.x,HZ-(SHOP.z+1.5))<5;if(near&&!shopNear)msg('The shopkeeper stares at you... (shop items coming soon)');shopNear=near;for(const e of shopEyes)e.visible=Math.sin(now*.004)>-.9}
+function extraFrame(dt){const now=performance.now();for(let i=POOPS.length-1;i>=0;i--){const p=POOPS[i];p.t+=dt;if(p.m.position.y>.06){p.vy-=9.5*dt;p.m.position.y=Math.max(.06,p.m.position.y+p.vy*dt)}if(p.t>25){scene.remove(p.m);POOPS.splice(i,1)}}anT_-=dt;if(anT_<=0){anT_=.8;drawAn();if(Math.hypot(HX-BRD.x,HZ-BRD.z)<14)paint(vpW)}vpW.mesh.visible=true;if(vrNow())vpW.vis=1;{const ug=!inR(SURF,HX,HZ),k=Math.min(1,dt*2),f=scene.fog;const tc=ug?[.03,.07,.04]:[.07,.04,.025],tn=ug?2:10,tf=ug?30:85;f.color.r+=(tc[0]-f.color.r)*k;f.color.g+=(tc[1]-f.color.g)*k;f.color.b+=(tc[2]-f.color.b)*k;f.near+=(tn-f.near)*k;f.far+=(tf-f.far)*k;scene.background.copy(f.color);const hl=scene.children.find(o=>o.isHemisphereLight);if(hl)hl.intensity+=((ug?.3:.85)-hl.intensity)*k;moonL.intensity+=((ug?.08:.75)-moonL.intensity)*k}if(shopL){shopL.intensity=1.2+Math.sin(now*.013)*.3+(Math.random()<.06?-.9:0);const near=Math.hypot(HX-SHOP.x,HZ-(SHOP.z+1.5))<5;if(near&&!shopNear)msg('The shopkeeper stares at you... (shop items coming soon)');shopNear=near;for(const e of shopEyes)e.visible=Math.sin(now*.004)>-.9}
 stairCD=Math.max(0,stairCD-dt);
 if(!stairCD&&!S.dead&&!S.grabbed){if(HX>=RAMP.x0&&HX<=RAMP.x1&&HZ>=RAMP.z1-.5&&HZ<=RAMP.ze&&P.y<.4){stairCD=2.5;teleportTo(ugStart[0],ugStart[1]);msg('Underground! Monsters hunt here. The green plaza is safe, and the stairs UP are in it.')}
 else if(Math.hypot(HX-UPS.x,HZ-UPS.z)<1.1){stairCD=2.5;teleportTo(RTOP.x,RTOP.z);msg('Back up on the surface')}}
