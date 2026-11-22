@@ -33,7 +33,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E use computer / pick up plush, Tab leaderboard, P phone<br>VR: touch the ground or a wall with a hand and push to move, push off to launch (phone: switch to Stick walking, Reach, Fast/Moon). Right stick turns. Grip grabs plush toys, A near the computer to code. Walk into the DOWN hole to go underground (monsters!). Stairs UP are in the underground green plaza.</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 23 · ramp down to the monsters · scary shop · desk by the back wall</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 24 · players match their real height · ramp · scary shop</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -192,12 +192,12 @@ const PCOL=[0x4a7bd0,0x4fb36a,0xd0a14a,0xb4577a,0x7a5ad0];
 function newOther(id,name,sim){const a=mkAvatar(PCOL[bots.length%5]);const o={id,name,x:W,z:H,y:1.6,yaw:0,nx:W,ny:1.6,nz:H,nyaw:0,hl:null,hr:null,score:0,strikes:0,muteT:0,banT:0,role:'Player',badge:0,inv:0,nc:0,dead:0,sim:sim?1:0,remote:sim?0:1,av:a,g:a.g,ex:mkEsp(0xffe040,.9,2),nx_:null,pt:0,mode:'wander',tgt:null,w:6,mon:0,conn:null};bots.push(o);return o}
 function dropOther(o){scene.remove(o.g);scene.remove(o.ex);const i=bots.indexOf(o);if(i>=0)bots.splice(i,1)}
 function updAv(o,dt){if(o.remote){const k=Math.min(1,dt*12);o.x+=(o.nx-o.x)*k;o.y+=(o.ny-o.y)*k;o.z+=(o.nz-o.z)*k;let d=o.nyaw-o.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));o.yaw+=d*k}
-const a=o.av,H=o.sim?1.62:Math.max(1,o.y||1.62),vis=!o.inv&&o.banT<Date.now()&&!o.dead;a.g.visible=vis;
+const a=o.av,H=o.sim?1.62:Math.max(.8,o.y||1.62),vis=!o.inv&&o.banT<Date.now()&&!o.dead;a.g.visible=vis;
 const sp=o.lx===undefined?0:Math.hypot(o.x-o.lx,o.z-o.lz)/Math.max(dt,.001);o.lx=o.x;o.lz=o.z;o.wp=(o.wp||0)+Math.min(sp,6)*dt*2.6;const mv=Math.min(1,sp/1.4);
 const vm=MS.find(x=>x.att&&x.vic===o&&x.vp),vic=!!vm,at=vic?vm.at:0,vt=vic?vm.ty:0,gore=vic&&S.gore&&vt===0&&at>=ATT.pull,cy=Math.cos(o.yaw),sy=Math.sin(o.yaw),rx=cy,rz=-sy,fx=-sy,fz=-cy;
 if(vic){const L=H-.12,th=vm.tilt||0,ph=vm.yaw;a.g.position.set(vm.vp.x-L*Math.sin(th)*Math.sin(ph),Math.max(.05,vm.vp.y-L*Math.cos(th)),vm.vp.z-L*Math.sin(th)*Math.cos(ph));a.g.rotation.set(th,ph,vt===0&&at<ATT.snap?Math.sin(at*7)*.12:0)}else{a.g.position.set(o.x,0,o.z);a.g.rotation.set(0,0,0)}
 const rp=vic&&vt===1&&S.gore?vm.rip:0,hd=vic&&vt===2&&at>=2.0&&S.gore,bodyGone=vic&&vt===2&&at>=3.6;if(bodyGone)a.g.visible=false;
-const shY=H-.3,hipY=Math.max(.55,H*.52),flail=vic?Math.sin(at*11):0;
+const shY=H-.3,hipY=Math.max(.4,H*.52),flail=vic?Math.sin(at*11):0;
 a.torso.position.set(0,(shY+hipY)/2+.04,0);a.torso.scale.set(1,shY-hipY+.18,1);a.torso.rotation.y=o.yaw;
 for(let i=0;i<2;i++){const s=i?1:-1,ph=o.wp+i*Math.PI,st=vic?flail*.3*s:Math.sin(ph)*.3*mv,hx=s*.1*rx,hz=s*.1*rz,lift=Math.max(0,Math.cos(ph))*.08*mv;
 const ax_=hx+fx*st,az_=hz+fz*st,ay_=.06+(vic?Math.abs(flail)*.1:lift);limb(a.legs[i],hx,hipY,hz,ax_,ay_,az_);a.feet[i].position.set(ax_+fx*.05,ay_-.02,az_+fz*.05);a.feet[i].rotation.y=o.yaw;
