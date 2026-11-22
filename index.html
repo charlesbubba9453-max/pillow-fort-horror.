@@ -497,11 +497,11 @@ function simBots(){for(const n of['Mira','Jax','Pip']){const b=newOther('s'+n,n,
 function beginGame(mode){NET.mode=mode;if(mode!=='solo')startVoice();started=true;ambience();$('menu').style.display='none';$('hud').style.display='block';P.x=start[0];P.z=start[1];P.y=0;P.vx=P.vy=P.vz=0;P.yaw=0;P.pit=0;okX=P.x;okZ=P.z;S.dead=0;S.banT=0;S.score=0;if(mode!=='client')simBots();applyNight();fx('');
 if(S.role==='Owner'||S.role==='Moderator')msg('You are '+S.role+'. Tap X twice for your staff phone.')}
 function showMenu(t){started=false;for(const v of VPS)showVP(v,0);$('hud').style.display='none';$('menu').style.display='flex';setNote(t||'');try{const s=ren.xr.getSession&&ren.xr.getSession();s&&s.end()}catch(e){}}
-function pre(){S.name=($('nm').value||'Player').replace(/[^\w \-]/g,'').slice(0,14)||'Player';S.gore=$('gore').checked?1:0;S.smooth=$('sm')&&$('sm').checked?1:0;S.col=($('col')&&$('col').value)||'#c0392b';try{localStorage.setItem('pfh_n',S.name)}catch(e){}}
+function pre(){S.name=($('nm').value||'Player').replace(/[^\w \-]/g,'').slice(0,14)||'Player';S.gore=$('gore').checked?1:0;S.smooth=$('sm')&&$('sm').checked?1:0;S.col=($('col')&&$('col').value)||'#c0392b';try{localStorage.setItem('pfh_n',S.name);localStorage.setItem('pfh_r',$('rs').value);localStorage.setItem('pfh_c',S.col);localStorage.setItem('pfh_s',S.smooth?'1':'0')}catch(e){}}
 $('bSolo').onclick=()=>{pre();S.role=$('rs').value;S.id='h';beginGame('solo')};
 $('bHost').onclick=()=>{pre();S.role=$('rs').value;S.id='h';setNote('Opening your room… (up to 10 seconds)');busy(1);startHosting((code,err)=>{busy(0);if(!code)return setNote(err+' Multiplayer may be blocked on this page. You can still play solo.');beginGame('host')})};
 $('bJoin').onclick=()=>{pre();const c=($('jc').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.length<4)return setNote('Type your friend’s 5-letter room code.');S.role='Player';setNote('Connecting… (up to 12 seconds)');busy(1);joinGame(c,S.name,err=>{busy(0);if(err)return setNote(err);beginGame('client')})};
-try{const n=localStorage.getItem('pfh_n');if(n)$('nm').value=n}catch(e){}
+try{const n=localStorage.getItem('pfh_n');if(n)$('nm').value=n;const r=localStorage.getItem('pfh_r');if(r&&/^(Owner|Moderator|Player)$/.test(r))$('rs').value=r;const c=localStorage.getItem('pfh_c');if(c&&/^#[0-9a-fA-F]{6}$/.test(c))$('col').value=c;if(localStorage.getItem('pfh_s')==='1')$('sm').checked=true}catch(e){}
 // ---------- main loop
 let last=0,sc=0,hudT=0,pT=0;
 function tick(t){const dt=Math.min(.05,last?(t-last)/1000:.016);last=t;
