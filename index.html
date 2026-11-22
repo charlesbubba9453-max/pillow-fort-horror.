@@ -38,7 +38,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
 <div class="row" style="margin-top:12px"><button id="bQuick" style="background:#1f6b3a">Quick Play (public room)</button></div>
-<div class="row" style="margin-top:8px"><button id="bHost" style="background:#7a1f2b">Host a room</button><button id="bSolo">Play solo</button></div>
+<div class="row" style="margin-top:8px"><button id="bHost" style="display:none;background:#7a1f2b">Host a room</button><button id="bSolo">Play solo</button></div>
 <label for="jc">Or join a friend (friends join as Players)</label>
 <div class="row" style="margin-top:6px"><button id="bKey" style="font-size:12px;padding:6px 10px">Staff key (Owner / Moderator)</button></div><div id="keyBox" style="display:none"><textarea id="keyOut" readonly rows="4" style="width:100%;font-size:11px"></textarea><div id="keyMsg" style="font-size:12px"></div></div>
 <div class="row"><input id="jc" type="text" maxlength="6" placeholder="ROOM CODE" autocomplete="off"><button id="bJoin">Join</button></div>
@@ -199,7 +199,7 @@ const ax_=hx+fx*st,az_=hz+fz*st,ay_=.06+(vic?Math.abs(flail)*.1:lift);limb(a.leg
 const sx=s*.23*rx,sz=s*.23*rz;let hxx,hyy,hzz;const h=o.hl&&!vic?(i?o.hr:o.hl):null;
 if(vic){hxx=sx+rx*s*.1;hyy=shY+.35+Math.abs(flail)*.15;hzz=sz+rz*s*.1+fz*.0}
 else if(h){hxx=h[0]-o.x;hyy=h[1];hzz=h[2]-o.z}else{const sw=-Math.sin(ph)*.3*mv;hxx=sx+s*.04*rx+fx*sw;hyy=Math.max(.3,shY-.6+(mv?Math.abs(Math.sin(ph))*.04:0));hzz=sz+s*.04*rz+fz*sw}
-const mx=(sx+hxx)/2+s*.05*rx,my=(shY+hyy)/2-.08,mz=(sz+hzz)/2+s*.05*rz;limb(a.armU[i],sx,shY,sz,mx,my,mz);limb(a.armL[i],mx,my,mz,hxx,hyy,hzz);a.hands[i].position.set(hxx,hyy,hzz);const ra=!!(rp&(1<<i)),rl=!!(rp&(4<<i));a.armU[i].visible=a.armL[i].visible=a.hands[i].visible=!ra;a.legs[i].visible=a.feet[i].visible=!rl}
+const mx=(sx+hxx)/2+s*.05*rx,my=(shY+hyy)/2-.08,mz=(sz+hzz)/2+s*.05*rz;limb(a.armU[i],sx,shY,sz,mx,my,mz);limb(a.armL[i],mx,my,mz,hxx,hyy,hzz);a.hands[i].position.set(hxx,hyy,hzz);const ra=!!(rp&(1<<i)),rl=!!(rp&(4<<i));a.armU[i].visible=a.armL[i].visible=a.hands[i].visible=!ra;a.legs[i].visible=a.feet[i].visible=false}
 limb(a.neck,0,shY+.02,0,0,H-.1,0);a.neck.visible=!gore&&!hd;a.stump.visible=!!gore||hd;a.stump.position.set(0,H-.12,0);a.head.visible=!gore&&!hd;a.head.position.set(0,H,0);a.head.rotation.y=o.yaw;a.tag.position.set(0,H+.45,0);
 setTag(a.tag,o.name,o.role,(o.badge&&o.role!=='Player')?1:0);o.ex.visible=!!S.esp||(typeof aimOn!=='undefined'&&aimOn&&o===aimBot);o.ex.position.set(o.x,1,o.z)}
 const ATT={stand:.8,pull:1.5,snap:2.3,drop:3.4,end:4.0},TYE=[4.0,4.8,4.8],RIP=[1.5,2.1,2.7,3.3],FADE=[1.5,1.5,2.0];
@@ -477,11 +477,11 @@ function xrIn(dt){headPos();if(!S.nc&&!freeP(HX,HZ,.25)){rig.position.x+=okX-HX;
 let L=null,Rt=null;for(const t of CT)if(t.src)(t.src.handedness==='left'?L=t:Rt=t);
 if(L&&vpP.vis&&vpP.mesh.parent!==L.o){L.o.add(vpP.mesh);vpP.mesh.position.set(.17,.216,-.312);vpP.mesh.rotation.set(-.9,0,0)}
 const ry=rig.rotation.y,c=Math.cos(ry),s=Math.sin(ry);let mx=0,mz=0,n=0,jump=0,clg=0,cdy=0,ncl=0;
-if(!S.dead&&!S.grabbed&&!S.banT){for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position,hc=cam.position,vx=hc.x+(p.x-hc.x)*1.8,vy=hc.y+(p.y-hc.y)*1.8,vz=hc.z+(p.z-hc.z)*1.8,grip=!!(b[1]&&b[1].pressed),rh=hw(t),cl=grip&&climbable(rh),gr=vy<=.3-RY||(ELEV=0,blk(rh[0],rh[2])&&rh[1]-RY<P.y+3);
+if(!S.dead&&!S.grabbed&&!S.banT){for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position,hc=cam.position,vx=hc.x+(p.x-hc.x)*2,vy=hc.y+(p.y-hc.y)*2,vz=hc.z+(p.z-hc.z)*2,grip=!!(b[1]&&b[1].pressed),rh=hw(t),cl=grip&&climbable(rh),gr=vy<=.35-RY||(ELEV=0,blk(rh[0],rh[2])&&rh[1]-RY<P.y+3);
 // Gorilla-Tag style: touch the ground (or a surface) with a hand and push against it to move. Grip near walls/trees/rocks to climb. Staff no-clip: grip anywhere to swim.
 if(cl||gr||(S.nc&&grip)){if(t.lp){const dx=vx-t.lp[0],dy=vy-t.lp[1],dz=vz-t.lp[2];mx-=dx*c+dz*s;mz-=-dx*s+dz*c;if(dy<0&&gr&&!cl)jump=Math.max(jump,-dy/dt);n++;if(cl){cdy+=dy;ncl++;clg=1;if(!t.cl){t.cl=1;buzz(t,.5,40)}}else{t.cl=0;if(gr&&!t.gc){t.gc=1;buzz(t,.15,20)}}}t.lp=[vx,vy,vz]}else{t.lp=null;t.cl=0;t.gc=0}}
 if(ncl)P.y=Math.max(0,Math.min(3.7,P.y-cdy/ncl*.75));
-if(n){const l=Math.hypot(mx,mz),mm=(S.nc?16:10)*dt;if(l>mm){mx*=mm/l;mz*=mm/l}lvx=mx/dt;lvz=mz/dt;if(jump>2.2&&P.on&&!clg)P.vy=Math.min(4.5,jump*.45)}else{const f=Math.exp(-1.8*dt);lvx*=f;lvz*=f;mx=lvx*dt;mz=lvz*dt}
+if(n){const l=Math.hypot(mx,mz),mm=(S.nc?16:12)*dt;if(l>mm){mx*=mm/l;mz*=mm/l}lvx=mx/dt;lvz=mz/dt;if(jump>1.8&&P.on&&!clg)P.vy=Math.min(5,jump*.5)}else{const f=Math.exp(-1.8*dt);lvx*=f;lvz*=f;mx=lvx*dt;mz=lvz*dt}
 const hy=headYaw(),fx_=-Math.sin(hy),fz=-Math.cos(hy);
 if(S.nc&&L&&L.src.gamepad&&!S.dead&&!S.grabbed){const a=L.src.gamepad.axes,sx=a[2]||0,sy=a[3]||0;if(Math.hypot(sx,sy)>.15){mx+=(fx_*-sy+Math.cos(hy)*sx)*7*dt;mz+=(fz*-sy-Math.sin(hy)*sx)*7*dt}}
 // no stick walking: you move with your hands (grips). The right stick only turns.
