@@ -31,9 +31,9 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 @media(max-width:700px){#vpP{width:min(260px,60vw);top:auto;bottom:70px}}
 </style></head><body>
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
-<div id="hud"><span></span><small>Desktop: WASD + mouse, E door, F pillow, G throw pillow, Tab leaderboard, P phone (staff)<br>VR: touch the ground with your hands and push to walk (like Gorilla Tag) · left trigger at belly = pillow (flick to throw it at the monster to stun it) · grab walls, rocks, trees to climb · hold right trigger to point · X once = leaderboard, twice = phone · Y = mic on/off</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
+<div id="hud"><span></span><small>Desktop: WASD + mouse, E door, F pillow, G throw pillow, Tab leaderboard, P phone (staff)<br>VR: touch the ground with your hands and push to walk (like Gorilla Tag), or hold a grip and swing your arm · left trigger at belly = pillow (flick to throw it at the monster to stun it) · grab walls, rocks, trees to climb · hold right trigger to point · X once = leaderboard, twice = phone · Y = mic on/off</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">Build with pillows. Don’t get caught by the Stitcher.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 8 · no staff room · bans on phone · 3 monsters</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">Build with pillows. Don’t get caught by the Stitcher.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 9 · no staff room · bans on phone · 3 monsters · easier hand movement</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -487,9 +487,9 @@ function xrIn(dt){headPos();if(!S.nc&&!freeP(HX,HZ,.25)){rig.position.x+=okX-HX;
 let L=null,Rt=null;for(const t of CT)if(t.src)(t.src.handedness==='left'?L=t:Rt=t);
 if(L&&vpP.vis&&vpP.mesh.parent!==L.o){L.o.add(vpP.mesh);vpP.mesh.position.set(.17,.216,-.312);vpP.mesh.rotation.set(-.9,0,0)}
 const ry=rig.rotation.y,c=Math.cos(ry),s=Math.sin(ry);let mx=0,mz=0,n=0,jump=0,clg=0,cdy=0,ncl=0;
-if(!S.dead&&!S.grabbed&&!S.banT){for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position,hc=cam.position,vx=hc.x+(p.x-hc.x)*2,vy=hc.y+(p.y-hc.y)*2,vz=hc.z+(p.z-hc.z)*2,grip=!!(b[1]&&b[1].pressed),rh=hw(t),cl=grip&&climbable(rh),gr=vy<=.35-RY||(ELEV=0,blk(rh[0],rh[2])&&rh[1]-RY<P.y+3);
-// Gorilla-Tag style: touch the ground (or a surface) with a hand and push against it to move. Grip near walls/trees/rocks to climb. Staff no-clip: grip anywhere to swim.
-if(cl||gr||(S.nc&&grip)){if(t.lp){const dx=vx-t.lp[0],dy=vy-t.lp[1],dz=vz-t.lp[2];mx-=dx*c+dz*s;mz-=-dx*s+dz*c;if(dy<0&&gr&&!cl)jump=Math.max(jump,-dy/dt);n++;if(cl){cdy+=dy;ncl++;clg=1;if(!t.cl){t.cl=1;buzz(t,.5,40)}}else{t.cl=0;if(gr&&!t.gc){t.gc=1;buzz(t,.15,20)}}}t.lp=[vx,vy,vz]}else{t.lp=null;t.cl=0;t.gc=0}}
+if(!S.dead&&!S.grabbed&&!S.banT){for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position,hc=cam.position,vx=hc.x+(p.x-hc.x)*2,vy=hc.y+(p.y-hc.y)*2,vz=hc.z+(p.z-hc.z)*2,grip=!!(b[1]&&b[1].pressed),rh=hw(t),cl=grip&&climbable(rh),gr=vy<=.5-RY||(ELEV=0,blk(rh[0],rh[2])&&rh[1]-RY<P.y+3);
+// Gorilla-Tag style: touch the ground (or a surface) with a hand and push against it to move; or hold a grip and swing your arm anywhere. Grip near walls/trees/rocks to climb.
+if(cl||gr||grip){if(t.lp){const dx=vx-t.lp[0],dy=vy-t.lp[1],dz=vz-t.lp[2];mx-=dx*c+dz*s;mz-=-dx*s+dz*c;if(dy<0&&gr&&!cl)jump=Math.max(jump,-dy/dt);n++;if(cl){cdy+=dy;ncl++;clg=1;if(!t.cl){t.cl=1;buzz(t,.5,40)}}else{t.cl=0;if(gr&&!t.gc){t.gc=1;buzz(t,.15,20)}}}t.lp=[vx,vy,vz]}else{t.lp=null;t.cl=0;t.gc=0}}
 if(ncl)P.y=Math.max(0,Math.min(3.7,P.y-cdy/ncl*.75));
 if(n){const l=Math.hypot(mx,mz),mm=(S.nc?16:12)*dt;if(l>mm){mx*=mm/l;mz*=mm/l}lvx=mx/dt;lvz=mz/dt;if(jump>1.8&&P.on&&!clg)P.vy=Math.min(5,jump*.5)}else{const f=Math.exp(-1.8*dt);lvx*=f;lvz*=f;mx=lvx*dt;mz=lvz*dt}
 const hy=headYaw(),fx_=-Math.sin(hy),fz=-Math.cos(hy);
