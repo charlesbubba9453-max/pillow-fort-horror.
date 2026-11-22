@@ -34,7 +34,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E use computer / pick up plush, Tab leaderboard, P phone<br>VR: touch the ground or a wall with a hand and push to move, push off to launch (phone: switch to Stick walking, Reach, Fast/Moon). Right stick turns. Grip grabs plush toys, A near the computer to code. Walk into the DOWN hole to go underground (monsters!). Stairs UP are in the underground green plaza.</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 25 · cave lobby · player menu + green screens · computer on the north wall</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 26 · hands-only movement · lowered legless gorillas · poop</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -192,13 +192,14 @@ g.add(head,tag);scene.add(g);return{g,torso,legs,feet,armU,armL,hands,neck,head,
 const PCOL=[0x4a7bd0,0x4fb36a,0xd0a14a,0xb4577a,0x7a5ad0];
 function newOther(id,name,sim){const a=mkAvatar(PCOL[bots.length%5]);const o={id,name,x:W,z:H,y:1.6,yaw:0,nx:W,ny:1.6,nz:H,nyaw:0,hl:null,hr:null,score:0,strikes:0,muteT:0,banT:0,role:'Player',badge:0,inv:0,nc:0,dead:0,sim:sim?1:0,remote:sim?0:1,av:a,g:a.g,ex:mkEsp(0xffe040,.9,2),nx_:null,pt:0,mode:'wander',tgt:null,w:6,mon:0,conn:null};bots.push(o);return o}
 function dropOther(o){scene.remove(o.g);scene.remove(o.ex);const i=bots.indexOf(o);if(i>=0)bots.splice(i,1)}
+const hipOf=H=>Math.max(.25,H-1.2);
 function updAv(o,dt){if(o.remote){const k=Math.min(1,dt*12);o.x+=(o.nx-o.x)*k;o.y+=(o.ny-o.y)*k;o.z+=(o.nz-o.z)*k;let d=o.nyaw-o.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));o.yaw+=d*k}
 const a=o.av,H=o.sim?1.62:Math.max(.8,o.y||1.62),vis=!o.inv&&o.banT<Date.now()&&!o.dead;a.g.visible=vis;
 const sp=o.lx===undefined?0:Math.hypot(o.x-o.lx,o.z-o.lz)/Math.max(dt,.001);o.lx=o.x;o.lz=o.z;o.wp=(o.wp||0)+Math.min(sp,6)*dt*2.6;const mv=Math.min(1,sp/1.4);
 const vm=MS.find(x=>x.att&&x.vic===o&&x.vp),vic=!!vm,at=vic?vm.at:0,vt=vic?vm.ty:0,gore=vic&&S.gore&&vt===0&&at>=ATT.pull,cy=Math.cos(o.yaw),sy=Math.sin(o.yaw),rx=cy,rz=-sy,fx=-sy,fz=-cy;
 if(vic){const L=H-.12,th=vm.tilt||0,ph=vm.yaw;a.g.position.set(vm.vp.x-L*Math.sin(th)*Math.sin(ph),Math.max(.05,vm.vp.y-L*Math.cos(th)),vm.vp.z-L*Math.sin(th)*Math.cos(ph));a.g.rotation.set(th,ph,vt===0&&at<ATT.snap?Math.sin(at*7)*.12:0)}else{a.g.position.set(o.x,0,o.z);a.g.rotation.set(0,0,0)}
 const rp=vic&&vt===1&&S.gore?vm.rip:0,hd=vic&&vt===2&&at>=2.0&&S.gore,bodyGone=vic&&vt===2&&at>=3.6;if(bodyGone)a.g.visible=false;
-const shY=H-.3,hipY=Math.max(.4,H*.52),flail=vic?Math.sin(at*11):0;
+const shY=H-.3,hipY=hipOf(H),flail=vic?Math.sin(at*11):0;
 a.torso.position.set(0,(shY+hipY)/2+.04,0);a.torso.scale.set(1,shY-hipY+.18,1);a.torso.rotation.y=o.yaw;
 for(let i=0;i<2;i++){const s=i?1:-1,ph=o.wp+i*Math.PI,st=vic?flail*.3*s:Math.sin(ph)*.3*mv,hx=s*.1*rx,hz=s*.1*rz,lift=Math.max(0,Math.cos(ph))*.08*mv;
 const ax_=hx+fx*st,az_=hz+fz*st,ay_=.06+(vic?Math.abs(flail)*.1:lift);limb(a.legs[i],hx,hipY,hz,ax_,ay_,az_);a.feet[i].position.set(ax_+fx*.05,ay_-.02,az_+fz*.05);a.feet[i].rotation.y=o.yaw;
@@ -439,7 +440,7 @@ bt(o,14,200,106,46,'Warn',()=>act('Warn'),'#8a6a1a',20);bt(o,127,200,106,46,'Mut
 const tg=(x,y,l,k,fn)=>bt(o,x,y,162,38,l+': '+(k?'ON':'off'),fn,k?'#2a6a45':'#3a3f5c',16);
 tg(14,256,'Invisible',S.inv,()=>S.inv=S.inv?0:1);tg(184,256,isStaff()?'No-clip':'No-clip (staff)',S.nc,()=>{if(isStaff())S.nc=S.nc?0:1});tg(14,300,'ESP',S.esp,()=>S.esp=S.esp?0:1);tg(184,300,'Night vision',S.bright,()=>{S.bright=S.bright?0:1;applyNight()});
 tg(14,344,'Shield badge',S.badge,()=>S.badge=S.badge?0:1);
-bt(o,14,388,106,38,'Stick: '+(S.stick?'ON':'off'),()=>{S.stick=S.stick?0:1;gtReset();msg(S.stick?'Left stick walking on (hands work too)':'Left stick off, hands only')},S.stick?'#2a6a45':'#3a3f5c',15);bt(o,127,388,106,38,'Reach: '+(S.longArms?'long':'normal'),()=>{S.longArms=S.longArms?0:1},S.longArms?'#2a6a45':'#3a3f5c',15);bt(o,240,388,106,38,GTP[S.mv||0].n+' ▸',()=>{S.mv=((S.mv||0)+1)%GTP.length},'#2a3550',15);
+bt(o,14,388,106,38,'Stick: '+(S.stick?'ON':'off'),()=>{if(!isStaff()){msg('Everyone moves on their hands!');return}S.stick=S.stick?0:1;gtReset();msg(S.stick?'Left stick walking on (hands work too)':'Left stick off, hands only')},S.stick?'#2a6a45':'#3a3f5c',15);bt(o,127,388,106,38,'Reach: '+(S.longArms?'long':'normal'),()=>{S.longArms=S.longArms?0:1},S.longArms?'#2a6a45':'#3a3f5c',15);bt(o,240,388,106,38,GTP[S.mv||0].n+' ▸',()=>{S.mv=((S.mv||0)+1)%GTP.length},'#2a3550',15);
 const tb=bots.find(b=>b.name===ST.tgt),isM=tb&&tb.role==='Moderator';bt(o,184,344,162,38,isM?'Remove mod':'Make mod',()=>{ST.m=setRole(ST.tgt,isM?'Player':'Moderator');if(ST.m==='ok'||ST.m==='sent')ST.m=(isM?'Removed mod: ':'Made mod: ')+ST.tgt;msg(ST.m)},S.role==='Owner'?'#5a3a8a':'#2a2a33',16);
 tx(c,'Reports ('+S.reports.length+')',14,454,17,'#ff9aa8');const r=S.reports[0];
 if(r){tx(c,(r.by+' → '+r.who).slice(0,30),14,478,16,'#fff');tx(c,r.why,14,498,14,'#aab');bt(o,190,462,76,40,'Select',()=>{ST.tgt=r.who;const i=RE.indexOf(r.why);if(i>=0)ST.ri=i},'#2a5a8a',15);bt(o,272,462,74,40,'Dismiss',()=>{if(NET.mode==='client')netSend({t:'dismiss',rid:r.id});S.reports=S.reports.filter(x=>x.id!==r.id)},'#555',15)}else tx(c,'No reports',14,478,15,'#778');
@@ -562,7 +563,7 @@ const setNote=t=>{$('note').textContent=t;try{$('menu').scrollTop=0}catch(e){}};
 addEventListener('error',e=>{if(!started)setNote('Error: '+(e.message||'something broke')+'. Tell me this message.')});
 addEventListener('unhandledrejection',e=>{if(!started)setNote('Error: '+((e.reason&&e.reason.message)||e.reason||'something broke'))});
 function simBots(){for(const n of['Mira','Jax','Pip']){const b=newOther('s'+n,n,1);b.x=start[0]+(R()-.5)*10;b.z=start[1]-2-R()*6;b.yaw=R()*6;b.score=(R()*40)|0}}
-function beginGame(mode){NET.mode=mode;if(mode!=='solo')startVoice();started=true;ambience();$('menu').style.display='none';$('hud').style.display='block';P.x=start[0];P.z=start[1];P.y=0;S.stick=1;P.vx=P.vy=P.vz=0;P.yaw=0;P.pit=0;okX=P.x;okZ=P.z;S.dead=0;S.banT=0;S.score=0;if(mode!=='client')simBots();applyNight();fx('');
+function beginGame(mode){NET.mode=mode;if(mode!=='solo')startVoice();started=true;ambience();$('menu').style.display='none';$('hud').style.display='block';P.x=start[0];P.z=start[1];P.y=0;S.stick=0;P.vx=P.vy=P.vz=0;P.yaw=0;P.pit=0;okX=P.x;okZ=P.z;S.dead=0;S.banT=0;S.score=0;if(mode!=='client')simBots();applyNight();fx('');
 msg('Tap X twice for your phone.')}
 function showMenu(t){started=false;for(const v of VPS)showVP(v,0);$('hud').style.display='none';$('menu').style.display='flex';setNote(t||'');try{const s=ren.xr.getSession&&ren.xr.getSession();s&&s.end()}catch(e){}}
 function pre(){S.name=($('nm').value||'Player').replace(/[^\w \-]/g,'').slice(0,14)||'Player';S.gore=$('gore').checked?1:0;S.smooth=$('sm')&&$('sm').checked?1:0;S.col=($('col')&&$('col').value)||'#c0392b';try{localStorage.setItem('pfh_n',S.name);localStorage.setItem('pfh_r',$('rs').value);localStorage.setItem('pfh_c',S.col);localStorage.setItem('pfh_s',S.smooth?'1':'0')}catch(e){}}
@@ -723,7 +724,7 @@ if(heldItem&&heldItem.held==='desk'){heldItem.held=0;heldItem.vx=heldItem.vz=0;h
 if(slapNearest())return true;
 const it=itemNear(HX,HY-.4,HZ,2.4);if(it){it.held='desk';heldItem=it;return true}return false}
 let compNear=0,stairCD=0;
-function extraFrame(dt){const now=performance.now();anT_-=dt;if(anT_<=0){anT_=.8;drawAn();if(Math.hypot(HX-BRD.x,HZ-BRD.z)<14)paint(vpW)}vpW.mesh.visible=true;if(vrNow())vpW.vis=1;{const ug=!inR(SURF,HX,HZ),k=Math.min(1,dt*2),f=scene.fog;const tc=ug?[.03,.07,.04]:[.07,.04,.025],tn=ug?2:10,tf=ug?30:85;f.color.r+=(tc[0]-f.color.r)*k;f.color.g+=(tc[1]-f.color.g)*k;f.color.b+=(tc[2]-f.color.b)*k;f.near+=(tn-f.near)*k;f.far+=(tf-f.far)*k;scene.background.copy(f.color)}if(shopL){shopL.intensity=1.2+Math.sin(now*.013)*.3+(Math.random()<.06?-.9:0);const near=Math.hypot(HX-SHOP.x,HZ-(SHOP.z+1.5))<5;if(near&&!shopNear)msg('The shopkeeper stares at you... (shop items coming soon)');shopNear=near;for(const e of shopEyes)e.visible=Math.sin(now*.004)>-.9}
+function extraFrame(dt){const now=performance.now();for(let i=POOPS.length-1;i>=0;i--){const p=POOPS[i];p.t+=dt;if(p.m.position.y>.06){p.vy-=9.5*dt;p.m.position.y=Math.max(.06,p.m.position.y+p.vy*dt)}if(p.t>25){scene.remove(p.m);POOPS.splice(i,1)}}anT_-=dt;if(anT_<=0){anT_=.8;drawAn();if(Math.hypot(HX-BRD.x,HZ-BRD.z)<14)paint(vpW)}vpW.mesh.visible=true;if(vrNow())vpW.vis=1;{const ug=!inR(SURF,HX,HZ),k=Math.min(1,dt*2),f=scene.fog;const tc=ug?[.03,.07,.04]:[.07,.04,.025],tn=ug?2:10,tf=ug?30:85;f.color.r+=(tc[0]-f.color.r)*k;f.color.g+=(tc[1]-f.color.g)*k;f.color.b+=(tc[2]-f.color.b)*k;f.near+=(tn-f.near)*k;f.far+=(tf-f.far)*k;scene.background.copy(f.color)}if(shopL){shopL.intensity=1.2+Math.sin(now*.013)*.3+(Math.random()<.06?-.9:0);const near=Math.hypot(HX-SHOP.x,HZ-(SHOP.z+1.5))<5;if(near&&!shopNear)msg('The shopkeeper stares at you... (shop items coming soon)');shopNear=near;for(const e of shopEyes)e.visible=Math.sin(now*.004)>-.9}
 stairCD=Math.max(0,stairCD-dt);
 if(!stairCD&&!S.dead&&!S.grabbed){if(HX>=RAMP.x0&&HX<=RAMP.x1&&HZ>=RAMP.z1-.5&&HZ<=RAMP.ze&&P.y<.4){stairCD=2.5;teleportTo(ugStart[0],ugStart[1]);msg('Underground! Monsters hunt here. The green plaza is safe, and the stairs UP are in it.')}
 else if(Math.hypot(HX-UPS.x,HZ-UPS.z)<1.1){stairCD=2.5;teleportTo(RTOP.x,RTOP.z);msg('Back up on the surface')}}
@@ -745,7 +746,7 @@ S.longArms=1;
 const GT={hist:[],hi:0,lh:[null,null],was:[0,0],q0:null,launch:null,prevT:0},HAND_R=.12,ARM_MAX=1.5,VEL_HIST=6,VEL_LIMIT=.3;
 function gtReset(){GT.lh=[null,null];GT.was=[0,0];GT.q0=null;GT.hist.length=0;GT.hi=0;GT.launch=null;GT.prevT=0}
 function gtHand(t){const w=hw(t),k=S.longArms?1.8:1,mx_=ARM_MAX*(S.longArms?1.6:1);let rx=(w[0]-HX)*k,ry=(w[1]-HY)*k,rz=(w[2]-HZ)*k;const l=Math.hypot(rx,ry,rz);if(l>mx_){rx*=mx_/l;ry*=mx_/l;rz*=mx_/l}return[HX+rx,HY+ry,HZ+rz]}
-const handHit=(p,m)=>{if(p[0]<=0||p[0]>=120||p[2]<=0||p[2]>=120)return false;const r=HAND_R+(m||0);let h=0;for(const d of[[0,0],[r,0],[-r,0],[0,r],[0,-r]])h=Math.max(h,surfH(p[0]+d[0],p[2]+d[1]));return p[1]<=h+r};
+const handHit=(p,m)=>{if(p[0]<=0||p[0]>=120||p[2]<=0||p[2]>=120)return false;const r=HAND_R+(m||0);let h=0;for(const d of[[0,0],[r,0],[-r,0],[0,r],[0,-r]])h=Math.max(h,surfH(p[0]+d[0],p[2]+d[1]));return p[1]<=h+r+.1};
 function gtLoco(dt,L,Rt){const pr=GTP[S.mv||0],hs=[L,Rt],first=[[0,0,0],[0,0,0]],hit=[0,0],cur=[null,null];
 for(let i=0;i<2;i++){const t=hs[i];if(!t){GT.lh[i]=null;GT.was[i]=0;continue}
 const c=gtHand(t),last=GT.lh[i]||c;cur[i]=c;const dx=c[0]-last[0],dy=c[1]-last[1]-2*9.8*dt*dt,dz=c[2]-last[2];let prev=last,hp=null;
@@ -773,8 +774,9 @@ function fartSound(x,z){try{const a=AC();if(!a)return;const t=a.currentTime,d=.3
 o.type='sawtooth';o.frequency.setValueAtTime(110+Math.random()*50,t);o.frequency.exponentialRampToValueAtTime(48,t+d);lfo.type='square';lfo.frequency.value=24+Math.random()*14;lg.gain.value=40;lfo.connect(lg);lg.connect(o.frequency);
 f.type='lowpass';f.frequency.value=700;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.55,t+.03);g.gain.setValueAtTime(.5,t+d*.7);g.gain.linearRampToValueAtTime(0,t+d);
 let out=g;const dx=x-HX,dz=z-HZ,dist=Math.hypot(dx,dz);if(dist>.05){g.gain.value*=1}o.connect(f);f.connect(g);g.connect(a.destination);o.start(t);lfo.start(t);o.stop(t+d+.05);lfo.stop(t+d+.05)}catch(e){}}
-function buttPos(o){const H=o.sim?1.62:Math.max(1,o.y||1.62),hipY=Math.max(.55,H*.52),fx=-Math.sin(o.yaw),fz=-Math.cos(o.yaw);return[o.x-fx*.22,hipY-.03,o.z-fz*.22]}
-function slapBot(o,t){if(o.slT&&performance.now()-o.slT<900)return false;o.slT=performance.now();const b=buttPos(o);fartSound(b[0],b[2]);puff(b[0]-(-Math.sin(o.yaw))*.1,b[1],b[2]-(-Math.cos(o.yaw))*.1);if(t)buzz(t,.8,70);msg(o.name+' farted!');return true}
+function buttPos(o){const H=o.sim?1.62:Math.max(.8,o.y||1.62),hipY=hipOf(H),fx=-Math.sin(o.yaw),fz=-Math.cos(o.yaw);return[o.x-fx*.22,hipY-.03,o.z-fz*.22]}
+function slapBot(o,t){if(o.slT&&performance.now()-o.slT<900)return false;o.slT=performance.now();const b=buttPos(o);fartSound(b[0],b[2]);puff(b[0]-(-Math.sin(o.yaw))*.1,b[1],b[2]-(-Math.cos(o.yaw))*.1);if(t)buzz(t,.8,70);if(Math.random()<.3){poop(b[0],b[1],b[2]);msg(o.name+' farted AND pooped!')}else msg(o.name+' farted!');return true}
+const POOPS=[];function poop(x,y,z){const m=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),new THREE.MeshLambertMaterial({color:0x4a2a12}));m.scale.set(1,.7,1);m.position.set(x,y,z);scene.add(m);POOPS.push({m,vy:0,t:0})}
 function slapNearest(){let best=null,bd=1.5;for(const o of bots){if(o.dead||o.inv)continue;const b=buttPos(o),d=Math.hypot(b[0]-HX,b[2]-HZ);if(d<bd){bd=d;best=o}}return best?slapBot(best,null):false}
 
 
