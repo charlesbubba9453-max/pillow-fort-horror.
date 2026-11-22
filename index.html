@@ -31,7 +31,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 @media(max-width:700px){#vpP{width:min(260px,60vw);top:auto;bottom:70px}}
 </style></head><body>
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
-<div id="hud"><span></span><small>Desktop: WASD + mouse, E door, F pillow, G throw pillow, Tab leaderboard, P phone (staff)<br>VR: hold grips and swing arms to walk · left trigger at belly = pillow (flick to throw it at the monster to stun it) · grab walls, rocks, trees to climb · hold right trigger to point · X once = leaderboard, twice = phone · Y = mic on/off</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
+<div id="hud"><span></span><small>Desktop: WASD + mouse, E door, F pillow, G throw pillow, Tab leaderboard, P phone (staff)<br>VR: touch the ground with your hands and push to walk (like Gorilla Tag) · left trigger at belly = pillow (flick to throw it at the monster to stun it) · grab walls, rocks, trees to climb · hold right trigger to point · X once = leaderboard, twice = phone · Y = mic on/off</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
 <h1>PILLOW FORT HORROR</h1><p class="sub">Build with pillows. Don’t get caught by the Stitcher.</p>
 <div id="note"></div>
@@ -106,7 +106,7 @@ function clear(ax,az,bx,bz){const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz);if(L>16)
 // ---------- three.js scene
 const ren=new THREE.WebGLRenderer({canvas:$('c'),antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x070a14);scene.fog=new THREE.Fog(0x0a0e1c,10,85);
-const cam=new THREE.PerspectiveCamera(75,1,.1,700);cam.rotation.order='YXZ';const rig=new THREE.Group();rig.add(cam);scene.add(rig);ren.xr.enabled=true;ren.xr.setReferenceSpaceType('local');
+const cam=new THREE.PerspectiveCamera(75,1,.1,700);cam.rotation.order='YXZ';const rig=new THREE.Group();rig.add(cam);scene.add(rig);ren.xr.enabled=true;ren.xr.setReferenceSpaceType('local-floor');let RY=0;
 const fadeM=new THREE.Mesh(new THREE.SphereGeometry(.4,8,6),new THREE.MeshBasicMaterial({color:0,side:THREE.BackSide,transparent:true,opacity:.92,depthTest:false}));fadeM.renderOrder=1000;fadeM.visible=false;cam.add(fadeM);
 function resize(){ren.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}addEventListener('resize',resize);resize();
 function tex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}return t}
@@ -272,12 +272,14 @@ if(q.y<=.05){q.y=.05;if(p.k==='b')p.m.scale.set(2+R()*3,.1,2+R()*3);p.m.rotation
 function goreAt(x,z){if(!S.gore)return;burst(x,1.1,z,45,'b');burst(x,1.3,z,7,'g')}
 function killSelf(x,z){if(S.dead)return;S.dead=1;S.score=0;snd(180,.9,'sawtooth',.15,40);goreAt(x,z);fx(S.gore?'rgba(110,0,0,.85)':'rgba(0,0,0,.92)','You were caught');fadeM.material.color.set(S.gore?0x5a0000:0);fadeM.visible=true;
 if(NET.mode==='host')netBcast({t:'k',id:S.id,x:r2(x),z:r2(z)});setTimeout(respawn,3500)}
-function respawn(){teleportTo(start[0]+(R()-.5)*6,start[1]-R()*4);S.dead=0;fx('');fadeM.visible=false;if(NET.mode!=='client'){for(const m of MS)if(!m.att){m.x=m.sp[0];m.z=m.sp[1];m.mode='wander';m.nx_=null;m.tgt=null}}}
+function respawn(){teleportTo(start[0]+(R()-.5)*6,start[1]-R()*4);S.dead=0;fx('');fadeM.visible=false;}
 function killRemote(b){b.dead=1;b.score=0;goreAt(b.x,b.z);netBcast({t:'k',id:b.id,x:r2(b.x),z:r2(b.z)});setTimeout(()=>{b.dead=0;if(b.sim){b.x=start[0]+(R()-.5)*8;b.z=start[1]-2-R()*6;b.nx_=null;b.tgt=null}},3800)}
 // ---------- the Stitcher's brain (runs on the host, or alone in solo)
 function targets(){const a=[];if(!S.dead&&!S.inv)a.push({self:1,x:HX,z:HZ,nc:S.nc});for(const b of bots)if((b.remote||b.sim)&&!b.dead&&!b.inv&&b.banT<Date.now())a.push({self:0,x:b.x,z:b.z,nc:b.nc,b});return a}
 function los(ax,az,bx,bz){const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz);for(let i=1;i<L/.5;i++)if(blk(ax+dx/L*i*.5,az+dz/L*i*.5))return 0;return 1}
-function monAI(m,dt){if(m.att){m.moving=false;return}if(m.stun>0){m.stun-=dt;m.moving=false;return}const ts=targets();let best=null,bd=26;
+function monAI(m,dt){if(m.att){m.moving=false;m.camp=0;return}
+// safe-zone camping: a monster that lingers right outside the start plaza is sent back to its own spawn point
+const dpz=Math.hypot(Math.max(PLZ.x0-m.x,0,m.x-PLZ.x1),Math.max(PLZ.z0-m.z,0,m.z-PLZ.z1));m.camp=dpz<12?(m.camp||0)+dt:Math.max(0,(m.camp||0)-dt*2);if(m.camp>6){m.camp=0;m.x=m.sp[0];m.z=m.sp[1];m.mode='wander';m.nx_=null;m.tgt=null;m.stun=0;m.moving=false;return}if(m.stun>0){m.stun-=dt;m.moving=false;return}const ts=targets();let best=null,bd=26;
 for(const t of ts){if(inSafe(t.x,t.z)||taken(m,t))continue;const d=Math.hypot(t.x-m.x,t.z-m.z);if(d<bd&&(d<7||los(m.x,m.z,t.x,t.z))){bd=d;best=t}}
 if(best){m.mode='chase';m.tgt=[best.x,best.z];m.lost=5}else if(m.mode==='chase'&&(m.lost-=dt)<=0)m.mode='wander';
 m.w-=dt;if((m.mode==='wander'&&m.w<=0)||!m.tgt){const pool=ts.filter(t=>!inSafe(t.x,t.z)&&!taken(m,t)),pr=pool.length&&R()<.7?pool[R()*pool.length|0]:null;let hp=pr?[pr.x+(R()-.5)*6,pr.z+(R()-.5)*6]:null;if(hp&&!(hp[0]>1&&hp[1]>1&&hp[0]<W*CS-1&&hp[1]<H*CS-1&&walk(Math.floor(hp[0]),Math.floor(hp[1]),1)))hp=null;m.tgt=hp||rnd(1);m.w=5}
@@ -431,7 +433,7 @@ function drawBL(o,c){bg(o,c,'BAN LOG');const now=Date.now(),l=S.bans.filter(x=>x
 for(const e of l){rr(c,10,y,o.w-20,62,10,'#1d2030');tx(c,e.name.slice(0,14),20,y+26,21,'#fff');const left=e.until>=9e15?'permanent':Math.ceil((e.until-now)/60000)+' min left';tx(c,'by '+String(e.by).slice(0,10)+' · '+left,20,y+50,14,'#f3b6cf');bt(o,o.w-120,y+10,100,42,'Unban',()=>{ST.m=unban(e.name);msg(ST.m==='ok'?'Unbanned '+e.name:ST.m)},'#2a6a45',18);y+=68}}
 const vpBL=mkVP('vpBL',500,500,1.2,drawBL);vpBL.fixed=1;vpBL.mesh.position.set(95.9,1.7,105);vpBL.mesh.rotation.y=-Math.PI/2;
 const drawP=()=>paint(vpP);
-function teleportTo(x,z){P.x=x;P.z=z;P.y=0;P.vx=P.vy=P.vz=0;lvx=lvz=0;if(vrNow()){const y=rig.rotation.y,c=Math.cos(y),s=Math.sin(y),p=cam.position;rig.position.set(x-(c*p.x+s*p.z),1.6,z-(-s*p.x+c*p.z))}okX=x;okZ=z;HX=x;HZ=z}
+function teleportTo(x,z){P.x=x;P.z=z;P.y=0;P.vx=P.vy=P.vz=0;lvx=lvz=0;if(vrNow()){const y=rig.rotation.y,c=Math.cos(y),s=Math.sin(y),p=cam.position;rig.position.set(x-(c*p.x+s*p.z),RY,z-(-s*p.x+c*p.z))}okX=x;okZ=z;HX=x;HZ=z}
 function showLetter(why){S.letter={k:'warn',why};showVP(vpL,1);snd(220,.6,'sine',.1,180)}
 function showBan(){S.letter={k:'ban'};showVP(vpL,1);snd(90,1,'sawtooth',.1,40)}
 function applyNight(){night.intensity=S.bright?.9:0}
@@ -473,15 +475,17 @@ function xrIn(dt){headPos();if(!S.nc&&!freeP(HX,HZ,.25)){rig.position.x+=okX-HX;
 let L=null,Rt=null;for(const t of CT)if(t.src)(t.src.handedness==='left'?L=t:Rt=t);
 if(L&&vpP.vis&&vpP.mesh.parent!==L.o){L.o.add(vpP.mesh);vpP.mesh.position.set(.17,.216,-.312);vpP.mesh.rotation.set(-.9,0,0)}
 const ry=rig.rotation.y,c=Math.cos(ry),s=Math.sin(ry);let mx=0,mz=0,n=0,jump=0,clg=0,cdy=0,ncl=0;
-if(!S.dead&&!S.grabbed&&!S.banT){for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position;if(b[1]&&b[1].pressed){if(t.lp){const dx=p.x-t.lp[0],dy=p.y-t.lp[1],dz=p.z-t.lp[2];mx-=dx*c+dz*s;mz-=-dx*s+dz*c;if(dy<0)jump=Math.max(jump,-dy/dt);n++;if(climbable(hw(t))){cdy+=dy;ncl++;clg=1;if(!t.cl){t.cl=1;buzz(t,.5,40)}}else t.cl=0}t.lp=[p.x,p.y,p.z]}else{t.lp=null;t.cl=0}}
-if(ncl)P.y=Math.max(0,Math.min(3.7,P.y-cdy/ncl*1.2));
-if(n){mx*=1.3;mz*=1.3;const l=Math.hypot(mx,mz),mm=(S.nc?16:8)*dt;if(l>mm){mx*=mm/l;mz*=mm/l}lvx=mx/dt;lvz=mz/dt;if(jump>1.5&&P.on&&!clg)P.vy=Math.min(4.5,jump*.5)}else{const f=Math.exp(-2.6*dt);lvx*=f;lvz*=f;mx=lvx*dt;mz=lvz*dt}
+if(!S.dead&&!S.grabbed&&!S.banT){for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position,hc=cam.position,vx=hc.x+(p.x-hc.x)*1.6,vy=hc.y+(p.y-hc.y)*1.6,vz=hc.z+(p.z-hc.z)*1.6,grip=!!(b[1]&&b[1].pressed),cl=grip&&climbable(hw(t)),gr=vy<=.25-RY;
+// Gorilla-Tag style: touch the ground (or a surface) with a hand and push against it to move. Grip near walls/trees/rocks to climb. Staff no-clip: grip anywhere to swim.
+if(cl||gr||(S.nc&&grip)){if(t.lp){const dx=vx-t.lp[0],dy=vy-t.lp[1],dz=vz-t.lp[2];mx-=dx*c+dz*s;mz-=-dx*s+dz*c;if(dy<0&&gr&&!cl)jump=Math.max(jump,-dy/dt);n++;if(cl){cdy+=dy;ncl++;clg=1;if(!t.cl){t.cl=1;buzz(t,.5,40)}}else{t.cl=0;if(gr&&!t.gc){t.gc=1;buzz(t,.15,20)}}}t.lp=[vx,vy,vz]}else{t.lp=null;t.cl=0;t.gc=0}}
+if(ncl)P.y=Math.max(0,Math.min(3.7,P.y-cdy/ncl*.75));
+if(n){mx*=.85;mz*=.85;const l=Math.hypot(mx,mz),mm=(S.nc?16:8)*dt;if(l>mm){mx*=mm/l;mz*=mm/l}lvx=mx/dt;lvz=mz/dt;if(jump>2.2&&P.on&&!clg)P.vy=Math.min(4.5,jump*.45)}else{const f=Math.exp(-2.6*dt);lvx*=f;lvz*=f;mx=lvx*dt;mz=lvz*dt}
 const hy=headYaw(),fx_=-Math.sin(hy),fz=-Math.cos(hy);
 // no stick walking: you move with your hands (grips). The right stick only turns.
 if(Rt&&Rt.src.gamepad){const a=Rt.src.gamepad.axes;snapCD-=dt;if(S.smooth){if(Math.abs(a[2]||0)>.2)turnRig(-(a[2])*dt*1.9)}else if(Math.abs(a[2]||0)>.7&&snapCD<=0){snapCD=.3;turnRig((a[2]>0?-1:1)*Math.PI/6)}
 if(S.nc)P.y=Math.max(0,P.y-(a[3]||0)*dt*(S.nc?9:4))}}
 if(mx||mz)moveRig(mx,mz);
-fall(dt,clg);rig.position.y=1.6+P.y;
+fall(dt,clg);rig.position.y=RY+P.y;
 // buttons
 for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad;if(!gp)continue;const b=gp.buttons;
 if(t===L){if(edge(t,5,b)===1)toggleMic();const x=edge(t,4,b);if(x===1){const now=performance.now();if(now-lastX<350){clearTimeout(xTimer);lastX=-1e9;if(isStaff())showVP(vpP,!vpP.vis)}else{lastX=now;clearTimeout(xTimer);xTimer=setTimeout(()=>showVP(vpB,!vpB.vis),350)}}
@@ -508,9 +512,9 @@ addEventListener('keyup',e=>KEYS[e.code]=0);addEventListener('blur',()=>{for(con
 document.addEventListener('mousemove',e=>{if(document.pointerLockElement===$('c')&&started&&!vrNow()){P.yaw-=e.movementX*.0025;P.pit=Math.max(-1.4,Math.min(1.4,P.pit-e.movementY*.0025))}});
 $('c').addEventListener('mousedown',()=>{if(!started||vrNow())return;if(document.pointerLockElement===$('c'))place();else if(!VPS.some(v=>v.vis)&&$('c').requestPointerLock)$('c').requestPointerLock()});
 // ---------- VR session
-ren.xr.addEventListener('sessionstart',()=>{S.vr=1;rig.position.set(P.x,1.6+P.y,P.z);rig.rotation.y=P.yaw;cam.rotation.set(0,0,0);okX=P.x;okZ=P.z;for(const v of VPS)if(v.vis)showVP(v,1);msg('Grip + swing your arms to walk. Left trigger at your belly = pillow')});
+ren.xr.addEventListener('sessionstart',()=>{S.vr=1;rig.position.set(P.x,RY+P.y,P.z);rig.rotation.y=P.yaw;cam.rotation.set(0,0,0);okX=P.x;okZ=P.z;for(const v of VPS)if(v.vis)showVP(v,1);msg('Touch the ground with your hands and push to walk. Left trigger at your belly = pillow')});
 ren.xr.addEventListener('sessionend',()=>{S.vr=0;rig.position.set(0,0,0);rig.rotation.set(0,0,0);vpP.mesh.parent!==scene&&scene.add(vpP.mesh);vpP.mesh.position.set(0,0,0);vpP.mesh.rotation.set(0,0,0);pouch.visible=heldM.visible=ghost.visible=lineM.visible=false;holding=0;for(const v of VPS)if(v.vis)showVP(v,1)});
-$('bVR').onclick=async()=>{try{const s=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor']});await ren.xr.setSession(s)}catch(e){msg('Couldn’t start VR: '+(e.message||e))}};
+$('bVR').onclick=async()=>{const go=async()=>{const s=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor']});await ren.xr.setSession(s)};try{RY=0;ren.xr.setReferenceSpaceType('local-floor');await go()}catch(e){try{RY=1.6;ren.xr.setReferenceSpaceType('local');await go()}catch(e2){msg('Couldn’t start VR: '+(e2.message||e2))}}};
 if(navigator.xr&&navigator.xr.isSessionSupported)navigator.xr.isSessionSupported('immersive-vr').then(ok=>{$('bVR').textContent=ok?'Enter VR':'VR not available here';$('bVR').disabled=!ok}).catch(()=>{});else{$('bVR').textContent='VR not available here';$('bVR').disabled=true}
 // ---------- voice chat: live audio between players (WebRTC through the same peer connection service)
 const VOICE={stream:null,on:0,ready:0,calls:{},aud:{}};
