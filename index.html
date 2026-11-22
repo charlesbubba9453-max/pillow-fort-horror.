@@ -33,7 +33,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E door, F pillow, G throw pillow, Tab leaderboard, P phone (staff)<br>VR: touch the ground with your hands and push to walk (like Gorilla Tag), or hold a grip and swing your arm · left trigger at belly = pillow (flick to throw it at the monster to stun it) · grab walls, rocks, trees to climb · hold right trigger to point · X once = leaderboard, twice = phone · Y = mic on/off</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">Build with pillows. Don’t get caught by the Stitcher.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 14 · hand must really touch the ground · instant random room · no room code · no block placing · no staff room · bans on phone · 3 monsters · easier hand movement</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">Build with pillows. Don’t get caught by the Stitcher.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 15 · no staff sign · hands reach the ground a bit easier · instant random room · no room code · no block placing · no staff room · bans on phone · 3 monsters · easier hand movement</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -158,7 +158,7 @@ const w=PLZ.x1-PLZ.x0,d=PLZ.z1-PLZ.z0,cx=(PLZ.x0+PLZ.x1)/2,cz=(PLZ.z0+PLZ.z1)/2;
 for(const[x,z]of[[PLZ.x0+.5,PLZ.z0+.5],[PLZ.x1-.5,PLZ.z0+.5],[PLZ.x0+.5,PLZ.z1-.5],[PLZ.x1-.5,PLZ.z1-.5]]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,3.4,8),new THREE.MeshLambertMaterial({color:0x222226})),l=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),new THREE.MeshBasicMaterial({color:0xffe9a8}));p.position.set(x,1.7,z);l.position.set(x,3.5,z);scene.add(p,l)}
 const pl=new THREE.PointLight(0xffd9a0,1.1,34);pl.position.set(cx,3.6,cz);scene.add(pl);
 const s=new THREE.Mesh(new THREE.PlaneGeometry(4,1),new THREE.MeshBasicMaterial({map:signTex('SAFE ZONE','#44ff99')}));s.position.set(cx,3.1,PLZ.z1-.6);s.rotation.y=Math.PI;scene.add(s);
-const s2=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:signTex('STAFF ONLY','#ff6a7a','#2a1016',512,128,60),side:THREE.DoubleSide}));s2.position.set(79.9,3.3,105);s2.rotation.y=-Math.PI/2;scene.add(s2)}
+}
 
 // ---------- people: avatars, name tags, the Stitcher
 const bots=[];
@@ -487,7 +487,7 @@ function xrIn(dt){headPos();if(!S.nc&&!freeP(HX,HZ,.25)){rig.position.x+=okX-HX;
 let L=null,Rt=null;for(const t of CT)if(t.src)(t.src.handedness==='left'?L=t:Rt=t);
 if(L&&vpP.vis&&vpP.mesh.parent!==L.o){L.o.add(vpP.mesh);vpP.mesh.position.set(.17,.216,-.312);vpP.mesh.rotation.set(-.9,0,0)}
 const ry=rig.rotation.y,c=Math.cos(ry),s=Math.sin(ry);let mx=0,mz=0,n=0,jump=0,clg=0,cdy=0,ncl=0;
-if(!S.dead&&!S.grabbed&&!S.banT){for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position,hc=cam.position,vx=hc.x+(p.x-hc.x)*2,vy=hc.y+(p.y-hc.y)*2,vz=hc.z+(p.z-hc.z)*2,grip=!!(b[1]&&b[1].pressed),rh=hw(t),cl=grip&&climbable(rh),gr=(p.y<=.16-RY&&P.y<.45)||(ELEV=0,blk(rh[0],rh[2])&&rh[1]-RY<P.y+3);
+if(!S.dead&&!S.grabbed&&!S.banT){for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position,hc=cam.position,vx=hc.x+(p.x-hc.x)*1.3,vy=hc.y+(p.y-hc.y)*1.3,vz=hc.z+(p.z-hc.z)*1.3,grip=!!(b[1]&&b[1].pressed),rh=hw(t),cl=grip&&climbable(rh),g0=vy<=(t.hg?.2:.1)-RY&&P.y<.45,gr=g0||(ELEV=0,blk(rh[0],rh[2])&&rh[1]-RY<P.y+3);t.hg=g0;
 // Gorilla-Tag style: touch the ground (or a surface) with a hand and push against it to move; or hold a grip and swing your arm anywhere. Grip near walls/trees/rocks to climb.
 if(cl||gr){if(t.lp){const dx=vx-t.lp[0],dy=vy-t.lp[1],dz=vz-t.lp[2];mx-=dx*c+dz*s;mz-=-dx*s+dz*c;if(dy<0&&gr&&!cl)jump=Math.max(jump,-dy/dt);n++;if(cl){cdy+=dy;ncl++;clg=1;if(!t.cl){t.cl=1;buzz(t,.5,40)}}else{t.cl=0;if(gr&&!t.gc){t.gc=1;buzz(t,.15,20)}}}t.lp=[vx,vy,vz]}else{t.lp=null;t.cl=0;t.gc=0}}
 if(ncl)P.y=Math.max(0,Math.min(3.7,P.y-cdy/ncl*.75));
