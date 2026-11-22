@@ -25,6 +25,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 .help{margin-top:14px;font-size:12.5px;color:#8a8fa3;line-height:1.55;border-top:1px solid var(--line);padding-top:12px}
 .vp{position:fixed;z-index:20;height:auto;filter:drop-shadow(0 8px 24px #000)}
 #vpB{left:12px;top:12px;width:min(460px,92vw)}#vpP{right:12px;top:12px;width:min(300px,44vw)}
+#vpS{left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,96vw)}
 #vpW{left:50%;top:50%;transform:translate(-50%,-50%);width:min(900px,96vw)}
 #vpC{left:50%;top:50%;transform:translate(-50%,-50%);width:min(640px,96vw)}
 #vpBL{left:50%;top:12px;transform:translateX(-50%);width:min(420px,92vw)}
@@ -34,7 +35,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E use computer / pick up plush, Tab leaderboard, P phone<br>VR: touch the ground or a wall with a hand and push to move, push off to launch (phone: switch to Stick walking, Reach, Fast/Moon). Right stick turns. Grip grabs plush toys, A near the computer to code. Walk into the DOWN hole to go underground (monsters!). Stairs UP are in the underground green plaza.</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 28 · smaller map · lower gorillas · Floor calibration on the phone</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 29 · enclosed small lobby · lobby shop · staff ban log + mod board</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -60,7 +61,7 @@ addEventListener('unhandledrejection',function(e){window.__err.push(String((e.re
 'use strict';
 const VER=4,W=60,H=60,CS=2,SW=W*2,SH=H*2,D4=[[1,0],[-1,0],[0,1],[0,-1]],$=i=>document.getElementById(i),R=Math.random,TAU=Math.PI*2;
 const RAMP={x0:77,x1:81,z0:56,z1:70,ze:72,d:3.2};let FLY=0;const rampY=(x,z)=>x>=RAMP.x0&&x<=RAMP.x1&&z>=RAMP.z0&&z<=RAMP.ze?-RAMP.d*Math.min(1,(z-RAMP.z0)/(RAMP.z1-RAMP.z0)):0;
-const ARM=1.6,BH=1.1,PLZ={x0:48,z0:92,x1:72,z1:116},CAB={x0:38,z0:34,x1:68,z1:50},LOBBY={x0:48,z0:50,x1:74,z1:72},SURF={x0:36,z0:30,x1:82,z1:82},SHR={x0:28,z0:92,x1:46,z1:116};
+const ARM=1.6,BH=1.1,PLZ={x0:48,z0:92,x1:72,z1:116},CAB={x0:38,z0:34,x1:68,z1:50},LOBBY={x0:52,z0:50,x1:82,z1:74},SURF={x0:36,z0:30,x1:82,z1:82},SHR={x0:0,z0:0,x1:0,z1:0};
 const GT_HANDS=false,PHONE_ALL=true,phoneOK=()=>PHONE_ALL||S.role!=='Player';
 const inR=(r,x,z)=>x>=r.x0&&x<=r.x1&&z>=r.z0&&z<=r.z1,inSafe=(x,z)=>inR(PLZ,x,z)||inR(SHR,x,z)||inR(CAB,x,z)||inR(LOBBY,x,z),inCab=(x,z)=>inR(CAB,x,z);
 const RANK={Player:0,Moderator:1,Owner:2},RE=['Harassment','Inappropriate language','Cheating','Griefing','Other rule violation'];
@@ -89,14 +90,14 @@ if(!nb.length){st.pop();continue}const d=nb[(r()*nb.length)|0],nx=x+d[0],nz=z+d[
 // a few extra openings so it is not one long tree
 for(let k=0;k<70;k++){const x=1+((r()*28)|0)*2,z=1+((r()*28)|0)*2,d=r()<.5?[2,0]:[0,2];if(okN(x,z)&&okN(x+d[0],z+d[1])&&seen.has(key(x,z))&&seen.has(key(x+d[0],z+d[1])))g[z+d[1]/2][x+d[0]/2]='.'}
 // safe plaza (cells 24..35 x 46..57) and the separate shop room (cells 14..22 x 46..57)
-for(let z=46;z<=57;z++){for(let x=24;x<=35;x++)g[z][x]='.';for(let x=14;x<=22;x++)g[z][x]='.'}
-for(const z of[50,51,52])g[z][23]='.';
+for(let z=46;z<=57;z++)for(let x=24;x<=35;x++)g[z][x]='.';
 for(let x=36;x<=38;x++)g[51][x]='.';for(let z=43;z<=45;z++)g[z][29]='.';
 // the surface: a walled dirt yard (cells 17..41 x 14..41) with the staff room inside; nothing else on it
 for(let z=13;z<=42;z++)for(let x=16;x<=42;x++)g[z][x]='#';
-for(let z=14;z<=41;z++)for(let x=17;x<=41;x++)g[z][x]='.';
-for(let x=17;x<=41;x++)g[14][x]=g[41][x]='#';for(let z=14;z<=41;z++)g[z][17]=g[z][41]='#';
-for(let x=19;x<=33;x++){g[17][x]='#';g[24][x]='#'}for(let z=17;z<=24;z++){g[z][19]='#';g[z][33]='#'}g[24][26]='.';g[24][27]='.';
+// the lobby: one small enclosed room (cells 26..40 x 25..36) plus the staff room (cells 20..32 x 18..23); everything else in the yard is solid
+for(let z=18;z<=23;z++)for(let x=20;x<=32;x++)g[z][x]='.';
+for(let z=25;z<=36;z++)for(let x=26;x<=40;x++)g[z][x]='.';
+g[24][26]='.';g[24][27]='.';
 g[33][30]='P';g[53][29]='U';g[51][51]='M';g[51][51]='M';return g})();
 const OBST=[];
 const ch=(cx,cz)=>(MAP[cz]&&MAP[cz][cx])||'#';
@@ -446,7 +447,7 @@ bt(o,14,200,106,46,'Warn',()=>act('Warn'),'#8a6a1a',20);bt(o,127,200,106,46,'Mut
 const tg=(x,y,l,k,fn)=>bt(o,x,y,162,38,l+': '+(k?'ON':'off'),fn,k?'#2a6a45':'#3a3f5c',16);
 tg(14,256,'Invisible',S.inv,()=>S.inv=S.inv?0:1);tg(184,256,isStaff()?'No-clip':'No-clip (staff)',S.nc,()=>{if(isStaff())S.nc=S.nc?0:1});tg(14,300,'ESP',S.esp,()=>S.esp=S.esp?0:1);tg(184,300,'Night vision',S.bright,()=>{S.bright=S.bright?0:1;applyNight()});
 tg(14,344,'Shield badge',S.badge,()=>S.badge=S.badge?0:1);
-const flAdj=d=>{S.fl=Math.max(-1,Math.min(1,Math.round((S.fl+d)*100)/100));try{localStorage.setItem('pfh_fl',S.fl)}catch(e){}msg('Floor offset '+(S.fl*100|0)+' cm (lower = your hands reach the ground sooner)')};bt(o,14,388,78,38,'Floor ▼',()=>flAdj(-.04),'#2a3550',15);bt(o,96,388,78,38,'Floor ▲',()=>flAdj(.04),'#2a3550',15);bt(o,178,388,84,38,'Reach: '+(S.longArms?'long':'normal'),()=>{S.longArms=S.longArms?0:1},S.longArms?'#2a6a45':'#3a3f5c',14);bt(o,266,388,80,38,GTP[S.mv||0].n+' ▸',()=>{S.mv=((S.mv||0)+1)%GTP.length},'#2a3550',14);
+const flAdj=d=>{S.fl=Math.max(-1,Math.min(1,Math.round((S.fl+d)*100)/100));try{localStorage.setItem('pfh_fl',S.fl)}catch(e){}msg('Floor offset '+(S.fl*100|0)+' cm (lower = your hands reach the ground sooner)')};bt(o,14,388,78,38,'Floor ▼',()=>flAdj(-.04),'#2a3550',15);bt(o,96,388,78,38,'Floor ▲',()=>flAdj(.04),'#2a3550',15);bt(o,178,388,84,38,'Reach: '+(S.longArms?'long':'normal'),()=>{S.longArms=S.longArms?0:1},S.longArms?'#2a6a45':'#3a3f5c',14);bt(o,266,388,80,38,GTP[S.mv||0].n+' ▸',()=>{const ok=i=>i===0||isStaff()||(i===1&&S.own&&S.own.fast)||(i===2&&S.own&&S.own.moon);let n=S.mv||0;for(let k=0;k<GTP.length;k++){n=(n+1)%GTP.length;if(ok(n))break}S.mv=n;if(n===0&&!isStaff())msg('Buy Moon Boots / Speed Gloves at the shop for more presets')},'#2a3550',14);
 const tb=bots.find(b=>b.name===ST.tgt),isM=tb&&tb.role==='Moderator';bt(o,184,344,162,38,isM?'Remove mod':'Make mod',()=>{ST.m=setRole(ST.tgt,isM?'Player':'Moderator');if(ST.m==='ok'||ST.m==='sent')ST.m=(isM?'Removed mod: ':'Made mod: ')+ST.tgt;msg(ST.m)},S.role==='Owner'?'#5a3a8a':'#2a2a33',16);
 tx(c,'Reports ('+S.reports.length+')',14,454,17,'#ff9aa8');const r=S.reports[0];
 if(r){tx(c,(r.by+' → '+r.who).slice(0,30),14,478,16,'#fff');tx(c,r.why,14,498,14,'#aab');bt(o,190,462,76,40,'Select',()=>{ST.tgt=r.who;const i=RE.indexOf(r.why);if(i>=0)ST.ri=i},'#2a5a8a',15);bt(o,272,462,74,40,'Dismiss',()=>{if(NET.mode==='client')netSend({t:'dismiss',rid:r.id});S.reports=S.reports.filter(x=>x.id!==r.id)},'#555',15)}else tx(c,'No reports',14,478,15,'#778');
@@ -605,12 +606,12 @@ drawSign();ren.setAnimationLoop(tick);
 // ---------- restart: dirt lobby (safe zone), couch, computer you can code on, mirror door to the staff room, plush monkeys
 const box=(w,h,d,col,x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:col}));m.position.set(x,y,z);scene.add(m);return m};
 // safe zones: the lobby on the surface and the plaza underground (green outline + sign + light)
-for(const Z of[LOBBY,PLZ,SHR]){const m=new THREE.MeshBasicMaterial({color:0x44ff99,transparent:true,opacity:.6}),add=(w,d,x,z)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,.05,d),m);b.position.set(x,.05,z);scene.add(b)};
+for(const Z of[LOBBY,PLZ]){const m=new THREE.MeshBasicMaterial({color:0x44ff99,transparent:true,opacity:.6}),add=(w,d,x,z)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,.05,d),m);b.position.set(x,.05,z);scene.add(b)};
 const w=Z.x1-Z.x0,d=Z.z1-Z.z0,cx=(Z.x0+Z.x1)/2,cz=(Z.z0+Z.z1)/2;add(w,.25,cx,Z.z0);add(w,.25,cx,Z.z1);add(.25,d,Z.x0,cz);add(.25,d,Z.x1,cz);
-const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,1),new THREE.MeshBasicMaterial({map:signTex('SAFE ZONE','#44ff99'),side:THREE.DoubleSide}));sg.position.set(cx,Z!==LOBBY?2.6:3.4,Z.z0+.4);scene.add(sg);
-if(Z!==SHR){const pl=new THREE.PointLight(0xffd9a0,1.1,40);pl.position.set(cx,Z===PLZ?2.8:4,cz);scene.add(pl)}}
+const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,1),new THREE.MeshBasicMaterial({map:signTex('SAFE ZONE','#44ff99'),side:THREE.DoubleSide}));sg.position.set(cx,2.6,Z.z0+.4);scene.add(sg);
+const pl=new THREE.PointLight(0xffd9a0,1.1,40);pl.position.set(cx,2.8,cz);scene.add(pl)}
 // underground: stone floor, dark ceiling, stairs DOWN in the lobby and stairs UP in the underground plaza
-{const ceil=new THREE.MeshLambertMaterial({color:0x2a1c12});for(const[x0,z0,x1,z1]of[[0,0,120,30],[0,82,120,120],[0,30,36,82],[82,30,120,82]]){const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,.3,z1-z0),ceil);m.position.set((x0+x1)/2,3.55,(z0+z1)/2);scene.add(m)}}
+{const ceil=new THREE.MeshLambertMaterial({color:0x2a1c12});for(const[x0,z0,x1,z1]of[[0,0,120,30],[0,82,120,120],[0,30,36,82],[82,30,120,82],[36,30,82,82]]){const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,.3,z1-z0),ceil);m.position.set((x0+x1)/2,3.55,(z0+z1)/2);scene.add(m)}}
 {const lamps=[];for(let z=1;z<H-1;z++)for(let x=1;x<W-1;x++)if(MAP[z][x]==='.'&&!(x>=16&&x<=42&&z>=13&&z<=42)&&Math.random()<.035){const d=[[1,0],[-1,0],[0,1],[0,-1]].find(d=>MAP[z+d[1]][x+d[0]]==='#');if(d)lamps.push([(x+.5)*CS+d[0]*(CS/2-.08),(z+.5)*CS+d[1]*(CS/2-.08),Math.random()<.5])}
 const lg=new THREE.BoxGeometry(.3,.3,.3),mk2=(col,arr)=>{const im=new THREE.InstancedMesh(lg,new THREE.MeshBasicMaterial({color:col}),Math.max(1,arr.length)),o=new THREE.Object3D();arr.forEach((q,i)=>{o.position.set(q[0],2.2,q[1]);o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.count=arr.length;scene.add(im)};mk2(0xff2a2a,lamps.filter(q=>q[2]));mk2(0x33ff55,lamps.filter(q=>!q[2]))}
 const UPS={x:66,z:100},RTOP={x:79,z:53};
@@ -627,26 +628,31 @@ const fl=new THREE.Mesh(new THREE.PlaneGeometry(w,RAMP.ze-RAMP.z1),rm);fl.rotati
 box(.4,RAMP.d+.6,RAMP.ze-RAMP.z0,0x1d1814,RAMP.x0-.2,-RAMP.d/2+.3,(RAMP.z0+RAMP.ze)/2);box(.4,RAMP.d+.6,RAMP.ze-RAMP.z0,0x1d1814,RAMP.x1+.2,-RAMP.d/2+.3,(RAMP.z0+RAMP.ze)/2);box(w+.8,RAMP.d+.6,.4,0x000000,cx,-RAMP.d/2+.3,RAMP.ze+.2);
 OBST.push([RAMP.x0-.45,RAMP.x0,RAMP.z0,RAMP.ze+.5,5],[RAMP.x1,RAMP.x1+.45,RAMP.z0,RAMP.ze+.5,5],[RAMP.x0,RAMP.x1,RAMP.ze,RAMP.ze+.5,5]);
 for(let k=0;k<6;k++){const a=new THREE.Mesh(new THREE.PlaneGeometry(.9,.9),new THREE.MeshBasicMaterial({color:0xff2a3a,transparent:true,opacity:.55,side:THREE.DoubleSide}));a.rotation.x=-Math.PI/2;a.position.set(cx,.03+(-RAMP.d*(k+.5)/6)*0,RAMP.z0+1+k*1.4);if(0)scene.add(a)}
-const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,1.1),new THREE.MeshBasicMaterial({map:signTex('DOWN ▼ MONSTERS','#ff6a7a','#12141c',512,140,56),side:THREE.DoubleSide}));sg.position.set(cx,3,RAMP.z0-.3);scene.add(sg);box(.2,3,.2,0x2a2a30,RAMP.x0-.3,1.5,RAMP.z0-.3);box(.2,3,.2,0x2a2a30,RAMP.x1+.3,1.5,RAMP.z0-.3);
+const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,.95),new THREE.MeshBasicMaterial({map:signTex('DOWN ▼ MONSTERS','#ff6a7a','#12141c',512,122,52),side:THREE.DoubleSide}));sg.position.set(cx,2.75,RAMP.z0-.3);scene.add(sg);box(.2,3.2,.2,0x2a2a30,RAMP.x0-.3,1.6,RAMP.z0-.3);box(.2,3.2,.2,0x2a2a30,RAMP.x1+.3,1.6,RAMP.z0-.3);
 const rl=new THREE.PointLight(0xff2a3a,1.4,16);rl.position.set(cx,-1.2,RAMP.z1);scene.add(rl);const rl2=new THREE.PointLight(0xff3a4a,.9,10);rl2.position.set(cx,1.5,RAMP.z0+1);scene.add(rl2)}
-// scary underground shop: its own big room west of the plaza, reached through the wide opening in the plaza's west wall
-const SHOP={x:37,z:97};let shopL,shopEyes=[],shopNear=0;
-{const cx=SHOP.x,bk=93.2,ph=3.2;pad(14,46,22,57,new THREE.MeshLambertMaterial({color:0x2a0a0e}),.03);
-box(.3,ph,6.5,0x16090b,cx-7.8,ph/2,95.6);box(.3,ph,6.5,0x16090b,cx+7.8,ph/2,95.6);OBST.push([cx-7.95,cx-7.65,92,99,4],[cx+7.65,cx+7.95,92,99,4]);box(15.9,.2,.4,0x0e0608,cx,ph,92.4);
-box(8,1.1,1,0x3a1a10,cx,.55,SHOP.z);box(8.4,.12,1.3,0x5a2a1a,cx,1.15,SHOP.z);OBST.push([cx-4.2,cx+4.2,SHOP.z-.65,SHOP.z+.65,1.2]);
-for(const sx of[-5.2,-2.6,0,2.6,5.2]){box(2,.1,.5,0x2a1a12,cx+sx,1.3,bk);box(2,.1,.5,0x2a1a12,cx+sx,2.3,bk);
-for(let r=0;r<3;r++){const col=[0x66ff66,0xff5577,0x88aaff][(r+(sx>0?1:0))%3];for(const yy of[1.5,2.5]){const jar=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.4,8),new THREE.MeshBasicMaterial({color:col}));jar.position.set(cx+sx-.5+(r%2)*.9,yy,bk);scene.add(jar)}}}
-const skm=new THREE.MeshLambertMaterial({color:0xe8e2cc});
-for(let k=0;k<7;k++){const s=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),skm);s.position.set(cx-6+k*2,2.95,92.8);scene.add(s);for(const ex of[-.08,.08]){const e=new THREE.Mesh(new THREE.SphereGeometry(.05,6,5),new THREE.MeshBasicMaterial({color:0x000000}));e.position.set(cx-6+k*2+ex,2.97,93.0);scene.add(e)}}
-const sg=new THREE.Mesh(new THREE.PlaneGeometry(6.4,1.2),new THREE.MeshBasicMaterial({map:signTex('THE CRYPT SHOP','#ff3a4a','#0c0406',768,144,80),side:THREE.DoubleSide}));sg.position.set(cx,2.7,99.1);scene.add(sg);box(.12,.9,.12,0x2a1a12,cx-3.1,3.0,99.1);box(.12,.9,.12,0x2a1a12,cx+3.1,3.0,99.1);
-const keep=new THREE.Group(),dm=new THREE.MeshLambertMaterial({color:0x0a0a0e});const body=new THREE.Mesh(new THREE.CylinderGeometry(.3,.5,2.0,8),dm);body.position.y=1.0;const hd=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),dm);hd.position.y=2.3;hd.scale.set(1,1.25,1);keep.add(body,hd);
-for(const ex of[-.12,.12]){const e=new THREE.Mesh(new THREE.SphereGeometry(.055,6,5),new THREE.MeshBasicMaterial({color:0xff1a1a}));e.position.set(ex,2.36,.25);keep.add(e);shopEyes.push(e)}
-const mo=new THREE.Mesh(new THREE.BoxGeometry(.28,.05,.04),new THREE.MeshBasicMaterial({color:0xff1a1a}));mo.position.set(0,2.15,.28);keep.add(mo);keep.position.set(cx,0,95);scene.add(keep);
-// coffins, candles and red banners around the room
-for(const[x,z,r]of[[30.5,105,.3],[43.5,105,-.3],[30.5,111,0],[43.5,111,0]]){const c=box(1,.7,2.2,0x2a1810,x,.35,z);c.rotation.y=r;OBST.push([x-.9,x+.9,z-1.2,z+1.2,.7])}
-for(const[x,z]of[[31,100],[43,100],[33,113],[41,113],[37,108]]){box(.12,.5,.12,0xe8dcc0,x,.25,z);const f=new THREE.Mesh(new THREE.SphereGeometry(.07,6,5),new THREE.MeshBasicMaterial({color:0xffa030}));f.position.set(x,.58,z);scene.add(f)}
-for(const x of[31,37,43]){const b=new THREE.Mesh(new THREE.PlaneGeometry(.9,2),new THREE.MeshBasicMaterial({color:0x7a0f1a,side:THREE.DoubleSide}));b.position.set(x,1.9,115.6);scene.add(b)}
-shopL=new THREE.PointLight(0xff2020,1.6,18);shopL.position.set(cx,2.6,100);scene.add(shopL)}
+// lobby shop: a counter against the north wall right of the leaderboard (E / A at the counter, or just look at the wall menu in VR)
+const SHOP={x:77.2,z:52.6};let shopL,shopEyes=[],shopNear=0;
+{const cx=SHOP.x;box(5.6,1.1,.9,0x3a1a10,cx,.55,SHOP.z);box(6,.12,1.2,0x5a2a1a,cx,1.15,SHOP.z);OBST.push([cx-3,cx+3,SHOP.z-.6,SHOP.z+.6,1.2]);
+box(.3,3.2,2.6,0x2a1810,cx-3.1,1.6,51.4);box(.3,3.2,2.6,0x2a1810,cx+3.1,1.6,51.4);OBST.push([cx-3.25,cx-2.95,50,52.7,4],[cx+2.95,cx+3.25,50,52.7,4]);
+for(const sx of[-2.2,2.2]){for(const yy of[.9,1.7,2.5]){box(1.3,.08,.45,0x2a1a12,cx+sx,yy,50.35);for(let k=0;k<3;k++){const jar=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.3,8),new THREE.MeshBasicMaterial({color:[0x66ff66,0xff5577,0x88aaff,0xffcc44][(k+(yy*3|0))%4]}));jar.position.set(cx+sx-.4+k*.4,yy+.2,50.35);scene.add(jar)}}}
+const sgn=new THREE.Mesh(new THREE.PlaneGeometry(3.2,.55),new THREE.MeshBasicMaterial({map:signTex('SHOP','#ffcf5a','#1a0f08',512,90,60),side:THREE.DoubleSide}));sgn.position.set(cx,3.05,50.14);scene.add(sgn);
+const keep=new THREE.Group(),dm=new THREE.MeshLambertMaterial({color:0x2a1a14});const body=new THREE.Mesh(new THREE.CylinderGeometry(.3,.45,1.5,8),dm);body.position.y=.75;const hd=new THREE.Mesh(new THREE.SphereGeometry(.28,10,8),new THREE.MeshLambertMaterial({color:0x5a3a28}));hd.position.y=1.8;hd.scale.set(1,1.15,1);keep.add(body,hd);
+for(const ex of[-.1,.1]){const e=new THREE.Mesh(new THREE.SphereGeometry(.05,6,5),new THREE.MeshBasicMaterial({color:0xffe060}));e.position.set(ex,1.85,.24);keep.add(e);shopEyes.push(e)}
+keep.position.set(cx,0,51.3);keep.rotation.y=0;scene.add(keep);
+shopL=new THREE.PointLight(0xffb060,.9,9);shopL.position.set(cx,2.6,53.5);scene.add(shopL)}
+// shop menu (coins = 50 + your points - what you spent)
+S.spent=0;S.own={fast:0,moon:0,torch:0};const coins=()=>50+(S.score|0)-S.spent;
+const SHOPITEMS=[['Plush Monkey',10,'A holdable plush monkey appears in front of you',()=>{const f=vrNow()?headYaw():P.yaw,x=HX-Math.sin(f)*.8,z=HZ-Math.cos(f)*.8,m=mkPlush(Math.random()<.5?1:0,0);m.position.set(x,0,z);ITEMS.push({m,x,y:.6,z,vx:0,vy:0,vz:0,held:0});return 1},0],
+['Flashlight',25,'Your light reaches twice as far',()=>{S.own.torch=1;torch.distance=32;torch.intensity=1.8;return 1},'torch'],
+['Moon Boots',40,'Unlocks the Moon (low gravity) preset on your phone',()=>{S.own.moon=1;return 1},'moon'],
+['Speed Gloves',40,'Unlocks the Fast preset on your phone',()=>{S.own.fast=1;return 1},'fast']];
+function drawS(o,c){rr(c,0,0,o.w,o.h,22,'#0c0806');c.lineWidth=10;c.strokeStyle='#c8a050';c.stroke();tx(c,'Pillow Fort Shop',o.w/2,56,44,'#ffcf5a','center');tx(c,'Coins: '+coins(),o.w/2,96,26,'#9fe0b0','center');bt(o,o.w-150,16,130,42,'Close',()=>showVP(vpS,0),'#7a1f2b',18);
+SHOPITEMS.forEach((it,i)=>{const y=120+i*88,own=it[4]&&S.own[it[4]];rr(c,24,y,o.w-48,78,14,'#2a2018');tx(c,it[0],44,y+34,28,'#fff');tx(c,it[2],44,y+62,16,'#bba');
+if(own)tx(c,'Owned',o.w-60,y+48,22,'#9fe0b0','right');else bt(o,o.w-210,y+16,170,46,it[1]+' coins',()=>{if(coins()<it[1]){msg('Not enough coins');return}if(it[3]()){S.spent+=it[1];msg('Bought '+it[0]+'!')}},coins()>=it[1]?'#2a6a45':'#5a4a3a',20)})}
+const vpS=mkVP('vpS',800,500,2.4,drawS);vpS.fixed=1;vpS.mesh.position.set(SHOP.x,1.9,50.12);vpS.mesh.rotation.set(0,0,0);vpS.mesh.visible=true;vpS.mesh.renderOrder=0;box(2.6,1.55,.08,0x6a4a2a,SHOP.x,1.9,50.06);
+// lobby roof beams and lanterns (the lobby is a closed cave room now)
+for(let x=56;x<=80;x+=6)box(.3,.3,24.4,0x2a1a10,x,3.25,62);for(let z=54;z<=72;z+=6)box(32,.25,.3,0x2a1a10,66,3.1,z);
+for(const[x,z]of[[58,56],[58,68],[74,68],[66,60],[70,72],[56,62]]){const l=new THREE.Mesh(new THREE.SphereGeometry(.15,8,6),new THREE.MeshBasicMaterial({color:0xffc070}));l.position.set(x,2.9,z);scene.add(l);box(.02,.5,.02,0x222222,x,3.2,z)}
 // couch (faces the spawn)
 {const CX=61,CZ=67;box(3,.3,1.1,0x4a1f2b,CX,.3,CZ);box(1.4,.2,.9,0x7a3347,CX-.72,.55,CZ-.05);box(1.4,.2,.9,0x7a3347,CX+.72,.55,CZ-.05);box(3.1,.85,.3,0x5b2636,CX,.85,CZ+.5);box(.3,.65,1.1,0x5b2636,CX-1.45,.62,CZ);box(.3,.65,1.1,0x5b2636,CX+1.45,.62,CZ)}
 // computer desk
@@ -712,7 +718,14 @@ const vpW=mkVP('vpW',1000,560,2.6,drawW);vpW.fixed=1;vpW.mesh.position.set(BRD.x
 box(2.8,1.7,.08,0x8a8ca4,BRD.x,2.0,50.06);
 const anC=document.createElement('canvas');anC.width=640;anC.height=320;const anT=new THREE.CanvasTexture(anC),anM=new THREE.Mesh(new THREE.PlaneGeometry(3.4,1.7),new THREE.MeshBasicMaterial({map:anT,fog:false}));anM.position.set(59.6,2.3,50.1);scene.add(anM);box(3.6,1.9,.08,0x2a1d12,59.6,2.3,50.05);
 function drawAn(){const c=anC.getContext('2d');c.fillStyle='#18c818';c.fillRect(0,0,640,320);c.fillStyle='rgba(0,0,0,.18)';for(let y=0;y<320;y+=6)c.fillRect(0,y,640,2);c.fillStyle='#e8ffe8';c.font='bold 30px monospace';c.textAlign='left';c.fillText('announcements',20,44);c.font='22px monospace';c.fillText('New level! Underground ramp,',20,80);c.fillText('scary shop and mirror staff room.',20,106);c.font='bold 22px monospace';c.fillText('PLAYERS ONLINE',20,152);c.font='20px monospace';people().slice(0,6).forEach((p,i)=>{c.fillText((p.n.slice(0,12)+'            ').slice(0,13)+'LEVEL '+lvl(p),20,184+i*24)});anT.needsUpdate=true}
-let anT_=0;
+// staff room: ban log board + moderators board (north wall of the monkey room)
+function mkBoard(x,title,col){const cv=document.createElement('canvas');cv.width=512;cv.height=384;const t=new THREE.CanvasTexture(cv),m=new THREE.Mesh(new THREE.PlaneGeometry(3,2.25),new THREE.MeshBasicMaterial({map:t,fog:false}));m.position.set(x,1.95,36.06);scene.add(m);box(3.2,2.45,.08,0x2a1d12,x,1.95,36.02);return{cv,t,title,col}}
+const banB=mkBoard(46,'BAN LOG','#ff5a6a'),modB=mkBoard(58,'MODERATORS','#6aa0ff');
+function drawStaffBoards(){let c=banB.cv.getContext('2d');c.fillStyle='#0b1a10';c.fillRect(0,0,512,384);c.strokeStyle=banB.col;c.lineWidth=8;c.strokeRect(4,4,504,376);c.fillStyle=banB.col;c.font='bold 40px monospace';c.textAlign='center';c.fillText('BAN LOG',256,56);c.textAlign='left';c.font='24px monospace';c.fillStyle='#d8ffe0';const now=Date.now(),l=S.bans.filter(x=>x.until>now).slice(0,7);
+if(!l.length)c.fillText('No active bans',30,120);l.forEach((e,i)=>{c.fillText(e.name.slice(0,10)+' · '+(e.until>=9e15?'forever':Math.ceil((e.until-now)/60000)+'m')+' · by '+String(e.by).slice(0,8),20,100+i*36)});banB.t.needsUpdate=true;
+c=modB.cv.getContext('2d');c.fillStyle='#0b1220';c.fillRect(0,0,512,384);c.strokeStyle=modB.col;c.lineWidth=8;c.strokeRect(4,4,504,376);c.fillStyle=modB.col;c.font='bold 40px monospace';c.textAlign='center';c.fillText('MODERATORS',256,56);c.textAlign='left';c.font='26px monospace';
+const st=people().filter(p=>p.role!=='Player').slice(0,8);if(!st.length){c.fillStyle='#d8e4ff';c.fillText('No staff online',30,120)}st.forEach((p,i)=>{c.fillStyle=p.role==='Owner'?'#ffd36a':'#8fb8ff';c.fillText((p.role==='Owner'?'★ ':'• ')+p.n.slice(0,12)+'  '+p.role,30,100+i*34)});modB.t.needsUpdate=true}
+let anT_=0,shopT_=0;
 const WSRC="onmessage=function(e){var out=[],me=e.data.me,P=function(a){if(out.length<400)out.push(a)};var api={say:function(t){P(['say',String(t)])},cube:function(x,y,z,c,s){P(['cube',+x||0,+y||0,+z||0,String(c||'white'),+s||1])},ball:function(x,y,z,c,s){P(['ball',+x||0,+y||0,+z||0,String(c||'white'),+s||1])},clear:function(){P(['clear'])},sky:function(c){P(['sky',String(c)])},tp:function(x,z){P(['tp',+x||0,+z||0])},me:function(){return{x:me[0],y:me[1],z:me[2]}},rand:Math.random,sin:Math.sin,cos:Math.cos};var names=Object.keys(api),vals=names.map(function(k){return api[k]});try{new Function(names.join(','),e.data.src).apply(null,vals)}catch(err){P(['err',String(err&&err.message||err)])}postMessage(out)};";
 let cw=null;
 function codeDone(m){CODE.out=m;drawScreen();if(vpC.vis)paint(vpC)}
@@ -727,13 +740,13 @@ try{if(cw)cw.terminate();const url=URL.createObjectURL(new Blob([WSRC],{type:'te
 cw.onmessage=e=>{clearTimeout(to);try{cw.terminate()}catch(e2){}applyCmds(e.data||[])};cw.onerror=e=>{clearTimeout(to);codeDone('Error: '+String(e.message||'').slice(0,50))};cw.postMessage({src:CODE.src,me:[HX,HY,HZ]});codeDone('running…')}catch(e){codeDone('Error: '+e.message)}}
 drawScreen();
 // E / A button: close the code panel, drop what you hold, use the computer, or pick up a plush
-function useExtra(){if(vpW.vis&&!vrNow()){showVP(vpW,0);return true}if(vpC.vis){showVP(vpC,0);return true}
+function useExtra(){if(vpS.vis&&!vrNow()){showVP(vpS,0);return true}if(vpW.vis&&!vrNow()){showVP(vpW,0);return true}if(vpC.vis){showVP(vpC,0);return true}
 if(heldItem&&heldItem.held==='desk'){heldItem.held=0;heldItem.vx=heldItem.vz=0;heldItem=null;return true}
-{const dc=Math.hypot(HX-COMP.x,HZ-COMP.z),dw=Math.hypot(HX-BRD.x,HZ-BRD.z);if(dw<3.4&&dw<dc){showVP(vpW,1);return true}if(dc<3.4){showVP(vpC,1);return true}}
+{const dc=Math.hypot(HX-COMP.x,HZ-COMP.z),dw=Math.hypot(HX-BRD.x,HZ-BRD.z),ds=Math.hypot(HX-SHOP.x,HZ-(SHOP.z+2));if(ds<3.2&&ds<dc&&ds<dw){showVP(vpS,1);return true}if(dw<3.4&&dw<dc){showVP(vpW,1);return true}if(dc<3.4){showVP(vpC,1);return true}}
 if(slapNearest())return true;
 const it=itemNear(HX,HY-.4,HZ,2.4);if(it){it.held='desk';heldItem=it;return true}return false}
 let compNear=0,stairCD=0;
-function extraFrame(dt){const now=performance.now();for(let i=POOPS.length-1;i>=0;i--){const p=POOPS[i];p.t+=dt;if(p.m.position.y>.06){p.vy-=9.5*dt;p.m.position.y=Math.max(.06,p.m.position.y+p.vy*dt)}if(p.t>25){scene.remove(p.m);POOPS.splice(i,1)}}anT_-=dt;if(anT_<=0){anT_=.8;drawAn();if(Math.hypot(HX-BRD.x,HZ-BRD.z)<14)paint(vpW)}vpW.mesh.visible=true;if(vrNow())vpW.vis=1;{const ug=!inR(SURF,HX,HZ),k=Math.min(1,dt*2),f=scene.fog;const tc=ug?[.03,.07,.04]:[.07,.04,.025],tn=ug?2:10,tf=ug?30:85;f.color.r+=(tc[0]-f.color.r)*k;f.color.g+=(tc[1]-f.color.g)*k;f.color.b+=(tc[2]-f.color.b)*k;f.near+=(tn-f.near)*k;f.far+=(tf-f.far)*k;scene.background.copy(f.color);const hl=scene.children.find(o=>o.isHemisphereLight);if(hl)hl.intensity+=((ug?.3:.85)-hl.intensity)*k;moonL.intensity+=((ug?.08:.75)-moonL.intensity)*k}if(shopL){shopL.intensity=1.2+Math.sin(now*.013)*.3+(Math.random()<.06?-.9:0);const near=Math.hypot(HX-SHOP.x,HZ-(SHOP.z+1.5))<5;if(near&&!shopNear)msg('The shopkeeper stares at you... (shop items coming soon)');shopNear=near;for(const e of shopEyes)e.visible=Math.sin(now*.004)>-.9}
+function extraFrame(dt){const now=performance.now();for(let i=POOPS.length-1;i>=0;i--){const p=POOPS[i];p.t+=dt;if(p.m.position.y>.06){p.vy-=9.5*dt;p.m.position.y=Math.max(.06,p.m.position.y+p.vy*dt)}if(p.t>25){scene.remove(p.m);POOPS.splice(i,1)}}anT_-=dt;if(anT_<=0){anT_=.8;drawAn();drawStaffBoards();if(Math.hypot(HX-BRD.x,HZ-BRD.z)<14)paint(vpW)}vpW.mesh.visible=true;if(vrNow())vpW.vis=1;{const ug=!inR(SURF,HX,HZ),k=Math.min(1,dt*2),f=scene.fog;const tc=ug?[.03,.07,.04]:[.07,.04,.025],tn=ug?2:10,tf=ug?30:85;f.color.r+=(tc[0]-f.color.r)*k;f.color.g+=(tc[1]-f.color.g)*k;f.color.b+=(tc[2]-f.color.b)*k;f.near+=(tn-f.near)*k;f.far+=(tf-f.far)*k;scene.background.copy(f.color);const hl=scene.children.find(o=>o.isHemisphereLight);if(hl)hl.intensity+=((ug?.3:.85)-hl.intensity)*k;moonL.intensity+=((ug?.08:.75)-moonL.intensity)*k}if(shopL){shopL.intensity=.85+Math.sin(now*.005)*.1;const near=Math.hypot(HX-SHOP.x,HZ-(SHOP.z+2))<3;if(near&&!shopNear)msg('Press E (or A) to shop. Coins: '+coins());shopNear=near;if(Math.floor(now/700)!==shopT_){shopT_=Math.floor(now/700);if(Math.hypot(HX-SHOP.x,HZ-SHOP.z)<14){paint(vpS)}}}if(vrNow())vpS.vis=1;vpS.mesh.visible=true
 stairCD=Math.max(0,stairCD-dt);
 if(!stairCD&&!S.dead&&!S.grabbed){if(HX>=RAMP.x0&&HX<=RAMP.x1&&HZ>=RAMP.z1-.5&&HZ<=RAMP.ze&&P.y<.4){stairCD=2.5;teleportTo(ugStart[0],ugStart[1]);msg('Underground! Monsters hunt here. The green plaza is safe, and the stairs UP are in it.')}
 else if(Math.hypot(HX-UPS.x,HZ-UPS.z)<1.1){stairCD=2.5;teleportTo(RTOP.x,RTOP.z);msg('Back up on the surface')}}
