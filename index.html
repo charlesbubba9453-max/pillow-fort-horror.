@@ -1,6 +1,5 @@
 <!doctype html>
-<html lang="en"><head>
-<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><meta name="theme-color" content="#140810"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><meta name="theme-color" content="#140810"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pillow Fort Horror</title>
 <style>
 :root{--bg:#07080d;--ink:#e9e6ee;--red:#ff4a5a;--card:#12141d;--line:#2a2d3d}
@@ -34,7 +33,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E use computer / pick up plush, Tab leaderboard, P phone<br>VR: touch the ground or a wall with a hand and push to move, push off to launch (phone: switch to Stick walking, Reach, Fast/Moon). Right stick turns. Grip grabs plush toys, A near the computer to code. Walk into the DOWN hole to go underground (monsters!). Stairs UP are in the underground green plaza.</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 22 · smaller realistic gorillas · big butts you can slap (they fart)</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 23 · ramp down to the monsters · scary shop · desk by the back wall</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -59,6 +58,7 @@ addEventListener('unhandledrejection',function(e){window.__err.push(String((e.re
 <script>
 'use strict';
 const VER=4,W=60,H=60,CS=2,SW=W*2,SH=H*2,D4=[[1,0],[-1,0],[0,1],[0,-1]],$=i=>document.getElementById(i),R=Math.random,TAU=Math.PI*2;
+const RAMP={x0:77,x1:81,z0:56,z1:70,ze:72,d:3.2};let FLY=0;const rampY=(x,z)=>x>=RAMP.x0&&x<=RAMP.x1&&z>=RAMP.z0&&z<=RAMP.ze?-RAMP.d*Math.min(1,(z-RAMP.z0)/(RAMP.z1-RAMP.z0)):0;
 const ARM=1.6,BH=1.1,PLZ={x0:48,z0:92,x1:72,z1:116},CAB={x0:38,z0:34,x1:68,z1:50},LOBBY={x0:48,z0:50,x1:74,z1:72},SURF={x0:36,z0:30,x1:82,z1:82};
 const GT_HANDS=false,PHONE_ALL=true,phoneOK=()=>PHONE_ALL||S.role!=='Player';
 const inR=(r,x,z)=>x>=r.x0&&x<=r.x1&&z>=r.z0&&z<=r.z1,inSafe=(x,z)=>inR(PLZ,x,z)||inR(CAB,x,z)||inR(LOBBY,x,z),inCab=(x,z)=>inR(CAB,x,z);
@@ -124,7 +124,8 @@ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAtt
 {const m=new THREE.Mesh(new THREE.SphereGeometry(16,20,14),new THREE.MeshBasicMaterial({color:0xf4efd6,fog:false}));m.position.set(W-200,220,H-260);scene.add(m)}
 // ground
 const grassT=tex(256,256,(x,w,h)=>{x.fillStyle='#4a3626';x.fillRect(0,0,w,h);for(let i=0;i<3200;i++){const k=R();x.fillStyle=k<.5?`rgba(${70+R()*30|0},${50+R()*25|0},${30+R()*18|0},.55)`:`rgba(${25+R()*20|0},${18+R()*14|0},${10+R()*10|0},.5)`;x.fillRect(R()*w,R()*h,1+R()*3,1+R()*3)}},[50,50]);
-{const g=new THREE.Mesh(new THREE.PlaneGeometry(W*CS+400,H*CS+400),new THREE.MeshLambertMaterial({map:grassT}));g.rotation.x=-Math.PI/2;g.position.set(W,0,H);scene.add(g)}
+{const X0=-200,X1=W*CS+200,Z0=-200,Z1=H*CS+200,pc=(xa,xb,za,zb)=>{const t=grassT.clone();t.needsUpdate=true;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set((xb-xa)/10.4,(zb-za)/10.4);const g=new THREE.Mesh(new THREE.PlaneGeometry(xb-xa,zb-za),new THREE.MeshLambertMaterial({map:t}));g.rotation.x=-Math.PI/2;g.position.set((xa+xb)/2,0,(za+zb)/2);scene.add(g)};
+pc(X0,RAMP.x0,Z0,Z1);pc(RAMP.x1,X1,Z0,Z1);pc(RAMP.x0,RAMP.x1,Z0,RAMP.z0);pc(RAMP.x0,RAMP.x1,RAMP.ze,Z1)}
 function pad(x0,z0,x1,z1,mat,y){const m=new THREE.Mesh(new THREE.PlaneGeometry((x1-x0+1)*CS,(z1-z0+1)*CS),mat);m.rotation.x=-Math.PI/2;m.position.set((x0+x1+1)*CS/2,y||.02,(z0+z1+1)*CS/2);scene.add(m);return m}
 const tileT=tex(128,128,(x,w,h)=>{x.fillStyle='#3a3d45';x.fillRect(0,0,w,h);x.strokeStyle='#2a2c33';x.lineWidth=3;x.strokeRect(1,1,w-2,h-2);for(let i=0;i<150;i++){x.fillStyle='rgba(255,255,255,.04)';x.fillRect(R()*w,R()*h,2,2)}},[6,6]);
 const woodT=tex(128,128,(x,w,h)=>{x.fillStyle='#3b2a22';x.fillRect(0,0,w,h);for(let i=0;i<8;i++){x.fillStyle=i%2?'#33241d':'#43302a';x.fillRect(0,i*16,w,15)}},[4,4]);
@@ -285,7 +286,7 @@ if(q.y<=.05){q.y=.05;if(p.k==='b')p.m.scale.set(2+R()*3,.1,2+R()*3);p.m.rotation
 function goreAt(x,z){if(!S.gore)return;burst(x,1.1,z,45,'b');burst(x,1.3,z,7,'g')}
 function killSelf(x,z){if(S.dead)return;S.dead=1;S.score=0;snd(180,.9,'sawtooth',.15,40);goreAt(x,z);fx(S.gore?'rgba(110,0,0,.85)':'rgba(0,0,0,.92)','You were caught');fadeM.material.color.set(S.gore?0x5a0000:0);fadeM.visible=true;
 if(NET.mode==='host')netBcast({t:'k',id:S.id,x:r2(x),z:r2(z)});setTimeout(respawn,3500)}
-function respawn(){teleportTo(start[0],start[1]);P.y=.55;S.dead=0;fx('');fadeM.visible=false;}
+function respawn(){teleportTo(start[0],start[1]);P.y=0;S.dead=0;fx('');fadeM.visible=false;}
 function killRemote(b){b.dead=1;b.score=0;goreAt(b.x,b.z);netBcast({t:'k',id:b.id,x:r2(b.x),z:r2(b.z)});setTimeout(()=>{b.dead=0;if(b.sim){b.x=start[0]+(R()-.5)*8;b.z=start[1]-2-R()*6;b.nx_=null;b.tgt=null}},3800)}
 // ---------- the Stitcher's brain (runs on the host, or alone in solo)
 function targets(){const a=[];if(!S.dead&&!S.inv)a.push({self:1,x:HX,z:HZ,nc:S.nc});for(const b of bots)if((b.remote||b.sim)&&!b.dead&&!b.inv&&b.banT<Date.now())a.push({self:0,x:b.x,z:b.z,nc:b.nc,b});return a}
@@ -437,7 +438,7 @@ bt(o,14,200,106,46,'Warn',()=>act('Warn'),'#8a6a1a',20);bt(o,127,200,106,46,'Mut
 const tg=(x,y,l,k,fn)=>bt(o,x,y,162,38,l+': '+(k?'ON':'off'),fn,k?'#2a6a45':'#3a3f5c',16);
 tg(14,256,'Invisible',S.inv,()=>S.inv=S.inv?0:1);tg(184,256,isStaff()?'No-clip':'No-clip (staff)',S.nc,()=>{if(isStaff())S.nc=S.nc?0:1});tg(14,300,'ESP',S.esp,()=>S.esp=S.esp?0:1);tg(184,300,'Night vision',S.bright,()=>{S.bright=S.bright?0:1;applyNight()});
 tg(14,344,'Shield badge',S.badge,()=>S.badge=S.badge?0:1);
-bt(o,14,388,106,38,'Stick: '+(S.stick?'ON':'off'),()=>{S.stick=S.stick?0:1;gtReset();msg(S.stick?'Stick walking':'Hand movement')},S.stick?'#2a6a45':'#3a3f5c',15);bt(o,127,388,106,38,'Reach: '+(S.longArms?'long':'normal'),()=>{S.longArms=S.longArms?0:1},S.longArms?'#2a6a45':'#3a3f5c',15);bt(o,240,388,106,38,GTP[S.mv||0].n+' ▸',()=>{S.mv=((S.mv||0)+1)%GTP.length},'#2a3550',15);
+bt(o,14,388,106,38,'Stick: '+(S.stick?'ON':'off'),()=>{S.stick=S.stick?0:1;gtReset();msg(S.stick?'Left stick walking on (hands work too)':'Left stick off, hands only')},S.stick?'#2a6a45':'#3a3f5c',15);bt(o,127,388,106,38,'Reach: '+(S.longArms?'long':'normal'),()=>{S.longArms=S.longArms?0:1},S.longArms?'#2a6a45':'#3a3f5c',15);bt(o,240,388,106,38,GTP[S.mv||0].n+' ▸',()=>{S.mv=((S.mv||0)+1)%GTP.length},'#2a3550',15);
 const tb=bots.find(b=>b.name===ST.tgt),isM=tb&&tb.role==='Moderator';bt(o,184,344,162,38,isM?'Remove mod':'Make mod',()=>{ST.m=setRole(ST.tgt,isM?'Player':'Moderator');if(ST.m==='ok'||ST.m==='sent')ST.m=(isM?'Removed mod: ':'Made mod: ')+ST.tgt;msg(ST.m)},S.role==='Owner'?'#5a3a8a':'#2a2a33',16);
 tx(c,'Reports ('+S.reports.length+')',14,454,17,'#ff9aa8');const r=S.reports[0];
 if(r){tx(c,(r.by+' → '+r.who).slice(0,30),14,478,16,'#fff');tx(c,r.why,14,498,14,'#aab');bt(o,190,462,76,40,'Select',()=>{ST.tgt=r.who;const i=RE.indexOf(r.why);if(i>=0)ST.ri=i},'#2a5a8a',15);bt(o,272,462,74,40,'Dismiss',()=>{if(NET.mode==='client')netSend({t:'dismiss',rid:r.id});S.reports=S.reports.filter(x=>x.id!==r.id)},'#555',15)}else tx(c,'No reports',14,478,15,'#778');
@@ -452,7 +453,7 @@ const now=Date.now(),l=S.bans.filter(x=>x.until>now).slice(0,7);if(!l.length)tx(
 for(const e of l){rr(c,10,y,o.w-20,64,10,'#1d2030');tx(c,e.name.slice(0,12),20,y+26,20,'#fff');const left=e.until>=9e15?'permanent':Math.ceil((e.until-now)/60000)+' min left';tx(c,'by '+String(e.by).slice(0,9)+' · '+left,20,y+50,13,'#f3b6cf');bt(o,o.w-112,y+12,92,40,'Unban',()=>{ST.m=unban(e.name);msg(ST.m==='ok'?'Unbanned '+e.name:ST.m)},'#2a6a45',17);y+=70}}
 
 const drawP=()=>paint(vpP);
-function teleportTo(x,z){if(typeof gtReset==='function')gtReset();P.x=x;P.z=z;P.y=0;P.vx=P.vy=P.vz=0;lvx=lvz=0;if(vrNow()){const y=rig.rotation.y,c=Math.cos(y),s=Math.sin(y),p=cam.position;rig.position.set(x-(c*p.x+s*p.z),RY,z-(-s*p.x+c*p.z))}okX=x;okZ=z;HX=x;HZ=z}
+function teleportTo(x,z){if(typeof gtReset==='function')gtReset();P.x=x;P.z=z;P.y=0;P.vx=P.vy=P.vz=0;lvx=lvz=0;if(vrNow()){const y=rig.rotation.y,c=Math.cos(y),s=Math.sin(y),p=cam.position;FLY=0;rig.position.set(x-(c*p.x+s*p.z),RY,z-(-s*p.x+c*p.z))}okX=x;okZ=z;HX=x;HZ=z}
 function showLetter(why){S.letter={k:'warn',why};showVP(vpL,1);snd(220,.6,'sine',.1,180)}
 function showBan(){S.letter={k:'ban'};showVP(vpL,1);snd(90,1,'sawtooth',.1,40)}
 function applyNight(){night.intensity=S.bright?.9:0}
@@ -471,7 +472,7 @@ const CT=[{},{}];let lastX=-1e9,xTimer=0,snapCD=0,lvx=0,lvz=0,okX=0,okZ=0;
 for(let i=0;i<2;i++){const o=ren.xr.getController(i);CT[i]={o,src:null,lp:null,pb:[]};rig.add(o);o.add(new THREE.Mesh(new THREE.SphereGeometry(.04,10,8),new THREE.MeshLambertMaterial({color:0xe6cbb4})));o.addEventListener('connected',e=>CT[i].src=e.data);o.addEventListener('disconnected',()=>CT[i].src=null)}
 const edge=(t,i,b)=>{const p=!!(b[i]&&b[i].pressed),w=!!t.pb[i];t.pb[i]=p;return p&&!w?1:!p&&w?-1:0};
 function headYaw(){return rig.rotation.y+cam.rotation.y}
-function hw(t){const p=t.o.position,y=rig.rotation.y,c=Math.cos(y),s=Math.sin(y);return[rig.position.x+c*p.x+s*p.z,rig.position.y+p.y,rig.position.z-s*p.x+c*p.z]}
+function hw(t){const p=t.o.position,y=rig.rotation.y,c=Math.cos(y),s=Math.sin(y);return[rig.position.x+c*p.x+s*p.z,rig.position.y+p.y-FLY,rig.position.z-s*p.x+c*p.z]}
 function hd(t){const v=new THREE.Vector3(0,0,-1).applyQuaternion(t.o.quaternion),y=rig.rotation.y,c=Math.cos(y),s=Math.sin(y);return[v.x*c+v.z*s,v.y,-v.x*s+v.z*c]}
 const RC=new THREE.Raycaster();
 function panelRay(t){const o=hw(t),d=hd(t);scene.updateMatrixWorld(true);RC.set(new THREE.Vector3(o[0],o[1],o[2]),new THREE.Vector3(d[0],d[1],d[2]));const ms=VPS.filter(v=>v.vis&&v.mesh.visible).map(v=>v.mesh);if(!ms.length)return null;const h=RC.intersectObjects(ms)[0];if(!h||!h.uv)return null;const vp=VPS.find(v=>v.mesh===h.object);return{vp,x:h.uv.x*vp.w,y:(1-h.uv.y)*vp.h,pt:[h.point.x,h.point.y,h.point.z],o}}
@@ -489,7 +490,7 @@ let gone=f.t>4||f.y<.25||(f.y<3&&blk(f.x,f.z));if(!gone&&f.y<2.7)for(const m of 
 if(gone){burst(f.x,Math.max(.3,f.y),f.z,6,'w');scene.remove(f.m);fly.splice(i,1)}}}
 function turnRig(k){headPos();const hx=HX,hz=HZ,lx=cam.position.x,lz=cam.position.z;rig.rotation.y+=k;const c2=Math.cos(rig.rotation.y),s2=Math.sin(rig.rotation.y);rig.position.x=hx-(c2*lx+s2*lz);rig.position.z=hz-(-s2*lx+c2*lz)}
 function moveRig(dx,dz){if(S.nc||freeP(HX+dx,HZ,.28)){rig.position.x+=dx;HX+=dx}else lvx=0;if(S.nc||freeP(HX,HZ+dz,.28)){rig.position.z+=dz;HZ+=dz}else lvz=0}
-function headPos(){const y=rig.rotation.y,c=Math.cos(y),s=Math.sin(y),p=cam.position;HX=rig.position.x+c*p.x+s*p.z;HZ=rig.position.z-s*p.x+c*p.z;HY=rig.position.y+p.y}
+function headPos(){const y=rig.rotation.y,c=Math.cos(y),s=Math.sin(y),p=cam.position;HX=rig.position.x+c*p.x+s*p.z;HZ=rig.position.z-s*p.x+c*p.z;HY=rig.position.y+p.y-FLY}
 let vrT=0,stkT=0;
 function xrIn(dt){headPos();vrT+=dt;
 // if the headset's floor is wrong (head near floor level) lift the player so they are not stuck in the floor
@@ -499,7 +500,7 @@ if(!S.nc&&!freeP(HX,HZ,.25)){stkT+=dt;if(stkT>1.5){stkT=0;respawn();return}rig.p
 let L=null,Rt=null;for(const t of CT)if(t.src)(t.src.handedness==='left'?L=t:Rt=t);
 if(L&&vpP.vis&&vpP.mesh.parent!==L.o){L.o.add(vpP.mesh);vpP.mesh.position.set(.17,.216,-.312);vpP.mesh.rotation.set(-.9,0,0)}
 const ry=rig.rotation.y,c=Math.cos(ry),s=Math.sin(ry);let mx=0,mz=0,n=0,jump=0,clg=0,cdy=0,ncl=0;
-if(!S.stick&&!S.nc&&!S.dead&&!S.grabbed&&!S.banT)gtLoco(dt,L,Rt);else GT.was=[0,0];
+const stickOn=S.stick&&L&&L.src.gamepad&&Math.hypot(L.src.gamepad.axes[2]||0,L.src.gamepad.axes[3]||0)>.15;if(!stickOn&&!S.nc&&!S.dead&&!S.grabbed&&!S.banT)gtLoco(dt,L,Rt);else GT.was=[0,0];
 if(!S.dead&&!S.grabbed&&!S.banT){if(0)for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad,b=gp?gp.buttons:[],p=t.o.position,hc=cam.position,vx=hc.x+(p.x-hc.x)*1.5,vy=hc.y+(p.y-hc.y)*1.5,vz=hc.z+(p.z-hc.z)*1.5,grip=!!(b[1]&&b[1].pressed),rh=hw(t),cl=grip&&climbable(rh),g0=p.y<=(t.hg?.22:.14)-RY&&P.y<.45,gr=g0||(ELEV=0,blk(rh[0],rh[2])&&rh[1]-RY<P.y+3);t.hg=g0;
 // Gorilla-Tag style: touch the ground (or a surface) with a hand and push against it to move; or hold a grip and swing your arm anywhere. Grip near walls/trees/rocks to climb.
 if(cl||(GT_HANDS&&gr)){if(t.lp){const dx=vx-t.lp[0],dy=vy-t.lp[1],dz=vz-t.lp[2];mx-=dx*c+dz*s;mz-=-dx*s+dz*c;if(dy<0&&gr&&!cl)jump=Math.max(jump,-dy/dt);n++;if(cl){cdy+=dy;ncl++;clg=1;if(!t.cl){t.cl=1;buzz(t,.5,40)}}else{t.cl=0;if(gr&&!t.gc){t.gc=1;buzz(t,.15,20)}}}t.lp=[vx,vy,vz]}else{t.lp=null;t.cl=0;t.gc=0}}
@@ -512,7 +513,7 @@ if(S.stick&&!S.nc&&L&&L.src.gamepad&&!S.dead&&!S.grabbed){const a=L.src.gamepad.
 if(Rt&&Rt.src.gamepad){const a=Rt.src.gamepad.axes;snapCD-=dt;if(S.smooth){if(Math.abs(a[2]||0)>.2)turnRig(-(a[2])*dt*1.9)}else if(Math.abs(a[2]||0)>.7&&snapCD<=0){snapCD=.3;turnRig((a[2]>0?-1:1)*Math.PI/6)}
 if(S.nc)P.y=Math.max(0,P.y-(a[3]||0)*dt*(S.nc?9:4))}}
 if(mx||mz)moveRig(mx,mz);
-fall(dt,clg);rig.position.y=RY+P.y;
+fall(dt,clg);FLY=rampY(HX,HZ);rig.position.y=RY+P.y+FLY;
 // buttons
 for(const t of[L,Rt]){if(!t)continue;const gp=t.src.gamepad;if(!gp)continue;const b=gp.buttons;
 if(t===L){if(edge(t,5,b)===1)toggleMic();const x=edge(t,4,b);if(x===1){const now=performance.now();if(now-lastX<350){clearTimeout(xTimer);lastX=-1e9;if(phoneOK())showVP(vpP,!vpP.vis)}else{lastX=now;clearTimeout(xTimer);xTimer=setTimeout(()=>showVP(vpB,!vpB.vis),350)}}
@@ -533,7 +534,7 @@ function deskIn(dt){const k=KEYS,f=(k.KeyW?1:0)-(k.KeyS?1:0),r=(k.KeyD?1:0)-(k.K
 if(!S.dead&&!S.grabbed&&!S.banT){const dx=(-sy*f+cy*r)*sp*dt,dz=(-cy*f-sy*r)*sp*dt;if(S.nc||freeP(P.x+dx,P.z,.28))P.x+=dx;if(S.nc||freeP(P.x,P.z+dz,.28))P.z+=dz;if(!S.nc){P.x=Math.max(1,Math.min(W*CS-1,P.x));P.z=Math.max(1,Math.min(H*CS-1,P.z))}
 if(S.nc)P.y=Math.max(0,P.y+((k.Space?1:0)-(k.KeyQ?1:0))*9*dt);else if(k.Space&&P.on)P.vy=4.5}
 HX=P.x;HZ=P.z;fall(dt,0);
-HY=P.y+(k.KeyC?1.0:1.6);cam.position.set(HX,HY,HZ);cam.rotation.set(P.pit,P.yaw,0);HANDS.l=HANDS.r=null}
+HY=P.y+(k.KeyC?1.0:1.6);FLY=rampY(HX,HZ);cam.position.set(HX,HY+FLY,HZ);cam.rotation.set(P.pit,P.yaw,0);HANDS.l=HANDS.r=null}
 addEventListener('keydown',e=>{if(!started||e.target.tagName==='INPUT')return;if(typeof codeKey==='function'&&codeKey(e))return;KEYS[e.code]=1;if(e.code==='KeyE')use();if(e.code==='KeyF')place();if(e.code==='KeyG'){const f=[-Math.sin(P.yaw)*Math.cos(P.pit),Math.sin(P.pit),-Math.cos(P.yaw)*Math.cos(P.pit)];throwPillow([HX+f[0]*.4,HY-.2,HZ+f[2]*.4],f.map(q=>q*11))}if(e.code==='Tab'){e.preventDefault();showVP(vpB,!vpB.vis)}if(e.code==='KeyP'&&phoneOK())showVP(vpP,!vpP.vis)});
 addEventListener('keyup',e=>KEYS[e.code]=0);addEventListener('blur',()=>{for(const k in KEYS)KEYS[k]=0});
 document.addEventListener('mousemove',e=>{if(document.pointerLockElement===$('c')&&started&&!vrNow()){P.yaw-=e.movementX*.0025;P.pit=Math.max(-1.4,Math.min(1.4,P.pit-e.movementY*.0025))}});
@@ -560,7 +561,7 @@ const setNote=t=>{$('note').textContent=t;try{$('menu').scrollTop=0}catch(e){}};
 addEventListener('error',e=>{if(!started)setNote('Error: '+(e.message||'something broke')+'. Tell me this message.')});
 addEventListener('unhandledrejection',e=>{if(!started)setNote('Error: '+((e.reason&&e.reason.message)||e.reason||'something broke'))});
 function simBots(){for(const n of['Mira','Jax','Pip']){const b=newOther('s'+n,n,1);b.x=start[0]+(R()-.5)*10;b.z=start[1]-2-R()*6;b.yaw=R()*6;b.score=(R()*40)|0}}
-function beginGame(mode){NET.mode=mode;if(mode!=='solo')startVoice();started=true;ambience();$('menu').style.display='none';$('hud').style.display='block';P.x=start[0];P.z=start[1];P.y=.55;P.vx=P.vy=P.vz=0;P.yaw=0;P.pit=0;okX=P.x;okZ=P.z;S.dead=0;S.banT=0;S.score=0;if(mode!=='client')simBots();applyNight();fx('');
+function beginGame(mode){NET.mode=mode;if(mode!=='solo')startVoice();started=true;ambience();$('menu').style.display='none';$('hud').style.display='block';P.x=start[0];P.z=start[1];P.y=0;S.stick=1;P.vx=P.vy=P.vz=0;P.yaw=0;P.pit=0;okX=P.x;okZ=P.z;S.dead=0;S.banT=0;S.score=0;if(mode!=='client')simBots();applyNight();fx('');
 msg('Tap X twice for your phone.')}
 function showMenu(t){started=false;for(const v of VPS)showVP(v,0);$('hud').style.display='none';$('menu').style.display='flex';setNote(t||'');try{const s=ren.xr.getSession&&ren.xr.getSession();s&&s.end()}catch(e){}}
 function pre(){S.name=($('nm').value||'Player').replace(/[^\w \-]/g,'').slice(0,14)||'Player';S.gore=$('gore').checked?1:0;S.smooth=$('sm')&&$('sm').checked?1:0;S.col=($('col')&&$('col').value)||'#c0392b';try{localStorage.setItem('pfh_n',S.name);localStorage.setItem('pfh_r',$('rs').value);localStorage.setItem('pfh_c',S.col);localStorage.setItem('pfh_s',S.smooth?'1':'0')}catch(e){}}
@@ -603,21 +604,48 @@ const pl=new THREE.PointLight(0xffd9a0,1.1,40);pl.position.set(cx,Z===PLZ?2.8:4,
 // underground: stone floor, dark ceiling, stairs DOWN in the lobby and stairs UP in the underground plaza
 {const stone=new THREE.MeshLambertMaterial({map:tileT});pad(0,0,59,14,stone);pad(0,41,59,59,stone);pad(0,15,17,40,stone);pad(41,15,59,40,stone);
 const ceil=new THREE.MeshLambertMaterial({color:0x1c1612});for(const[x0,z0,x1,z1]of[[0,0,120,30],[0,82,120,120],[0,30,36,82],[82,30,120,82]]){const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,.3,z1-z0),ceil);m.position.set((x0+x1)/2,3.55,(z0+z1)/2);scene.add(m)}}
-const HOLE={x:72,z:60},UPS={x:66,z:100};
+const UPS={x:66,z:100},RTOP={x:79,z:53};
 function stairs(P_,col,label,lcol){const pit=new THREE.Mesh(new THREE.PlaneGeometry(2.4,2.4),new THREE.MeshBasicMaterial({color:col===0xff4a5a?0x000000:0x1a2a1a}));pit.rotation.x=-Math.PI/2;pit.position.set(P_.x,.04,P_.z);scene.add(pit);
 const rm=new THREE.MeshBasicMaterial({color:col});for(const[w,d,dx,dz]of[[2.6,.12,0,-1.25],[2.6,.12,0,1.25],[.12,2.6,-1.25,0],[.12,2.6,1.25,0]]){const b=new THREE.Mesh(new THREE.BoxGeometry(w,.08,d),rm);b.position.set(P_.x+dx,.06,P_.z+dz);scene.add(b)}
 for(let k=0;k<4;k++)box(2.0-k*.35,.05,.38,col===0xff4a5a?0x3a2a22:0x4a5a3a,P_.x,.07,P_.z-.8+k*.5);
 const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:signTex(label,lcol,'#12141c',512,128,60),side:THREE.DoubleSide}));sg.position.set(P_.x,2.3,P_.z);scene.add(sg);
 const l=new THREE.PointLight(col,1.2,14);l.position.set(P_.x,1.6,P_.z);scene.add(l)}
-stairs(HOLE,0xff4a5a,'DOWN ▼','#ff6a7a');stairs(UPS,0x44ff99,'UP ▲','#44ff99');
+stairs(UPS,0x44ff99,'UP ▲','#44ff99');
+// ramp down (east side of the yard): trench with a sloped floor, walls and a red DOWN sign
+{const rm=new THREE.MeshLambertMaterial({map:tileT}),wm=new THREE.MeshLambertMaterial({color:0x1d1814}),L=Math.hypot(RAMP.z1-RAMP.z0,RAMP.d),ang=Math.atan2(RAMP.d,RAMP.z1-RAMP.z0),w=RAMP.x1-RAMP.x0,cx=(RAMP.x0+RAMP.x1)/2;
+const sl=new THREE.Mesh(new THREE.PlaneGeometry(w,L),rm);sl.rotation.x=-Math.PI/2+ang;sl.position.set(cx,-RAMP.d/2,(RAMP.z0+RAMP.z1)/2);scene.add(sl);
+const fl=new THREE.Mesh(new THREE.PlaneGeometry(w,RAMP.ze-RAMP.z1),rm);fl.rotation.x=-Math.PI/2;fl.position.set(cx,-RAMP.d+.01,(RAMP.z1+RAMP.ze)/2);scene.add(fl);
+box(.4,RAMP.d+.6,RAMP.ze-RAMP.z0,0x1d1814,RAMP.x0-.2,-RAMP.d/2+.3,(RAMP.z0+RAMP.ze)/2);box(.4,RAMP.d+.6,RAMP.ze-RAMP.z0,0x1d1814,RAMP.x1+.2,-RAMP.d/2+.3,(RAMP.z0+RAMP.ze)/2);box(w+.8,RAMP.d+.6,.4,0x000000,cx,-RAMP.d/2+.3,RAMP.ze+.2);
+OBST.push([RAMP.x0-.45,RAMP.x0,RAMP.z0,RAMP.ze+.5,5],[RAMP.x1,RAMP.x1+.45,RAMP.z0,RAMP.ze+.5,5],[RAMP.x0,RAMP.x1,RAMP.ze,RAMP.ze+.5,5]);
+for(let k=0;k<6;k++){const a=new THREE.Mesh(new THREE.PlaneGeometry(.9,.9),new THREE.MeshBasicMaterial({color:0xff2a3a,transparent:true,opacity:.55,side:THREE.DoubleSide}));a.rotation.x=-Math.PI/2;a.position.set(cx,.03+(-RAMP.d*(k+.5)/6)*0,RAMP.z0+1+k*1.4);if(0)scene.add(a)}
+const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,1.1),new THREE.MeshBasicMaterial({map:signTex('DOWN ▼ MONSTERS','#ff6a7a','#12141c',512,140,56),side:THREE.DoubleSide}));sg.position.set(cx,3,RAMP.z0-.3);scene.add(sg);box(.2,3,.2,0x2a2a30,RAMP.x0-.3,1.5,RAMP.z0-.3);box(.2,3,.2,0x2a2a30,RAMP.x1+.3,1.5,RAMP.z0-.3);
+const rl=new THREE.PointLight(0xff2a3a,1.4,16);rl.position.set(cx,-1.2,RAMP.z1);scene.add(rl);const rl2=new THREE.PointLight(0xff3a4a,.9,10);rl2.position.set(cx,1.5,RAMP.z0+1);scene.add(rl2)}
+// scary underground shop (north side of the green plaza)
+const SHOP={x:57,z:97};let shopL,shopEyes=[],shopNear=0;
+{const cx=SHOP.x,bk=93.2;pad(24,46,34,48,new THREE.MeshLambertMaterial({color:0x2a0a0e}),.03);
+box(15,6,.5,0x16090b,cx,3,92.4);box(.5,6,7,0x16090b,cx-7.5,3,95.6);box(.5,6,7,0x16090b,cx+7.5,3,95.6);box(15.5,.4,7.6,0x0e0608,cx,5.9,95.8);
+box(8,1.1,1,0x3a1a10,cx,.55,SHOP.z);box(8.4,.12,1.3,0x5a2a1a,cx,1.15,SHOP.z);OBST.push([cx-4.2,cx+4.2,SHOP.z-.65,SHOP.z+.65,1.2]);
+for(const sx of[-5.2,-2.6,0,2.6,5.2]){box(2,.1,.5,0x2a1a12,cx+sx,1.4,bk);box(2,.1,.5,0x2a1a12,cx+sx,2.5,bk);box(2,.1,.5,0x2a1a12,cx+sx,3.6,bk);
+for(let r=0;r<3;r++){const jar=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.4,8),new THREE.MeshBasicMaterial({color:[0x66ff66,0xff5577,0x88aaff][(r+(sx>0?1:0))%3]}));jar.position.set(cx+sx-.5+(r%2)*.9,1.65+((sx*7|0)&1)*0+0,bk);scene.add(jar);const j2=jar.clone();j2.position.y=2.75;scene.add(j2)}}
+const skm=new THREE.MeshLambertMaterial({color:0xe8e2cc});
+for(let k=0;k<7;k++){const s=new THREE.Mesh(new THREE.SphereGeometry(.24,10,8),skm);s.position.set(cx-6+k*2,4.8,92.8);scene.add(s);for(const ex of[-.09,.09]){const e=new THREE.Mesh(new THREE.SphereGeometry(.06,6,5),new THREE.MeshBasicMaterial({color:0x000000}));e.position.set(cx-6+k*2+ex,4.82,93.04);scene.add(e)}}
+const sg=new THREE.Mesh(new THREE.PlaneGeometry(7,1.6),new THREE.MeshBasicMaterial({map:signTex('THE CRYPT SHOP','#ff3a4a','#0c0406',768,176,86),side:THREE.DoubleSide}));sg.position.set(cx,5.2,97.5-.1);sg.position.z=99.1;sg.position.y=5;scene.add(sg);box(.15,1.2,.15,0x2a1a12,cx-3.4,5.8,99.1);box(.15,1.2,.15,0x2a1a12,cx+3.4,5.8,99.1);
+// the shopkeeper: tall dark figure with glowing eyes
+const keep=new THREE.Group(),dm=new THREE.MeshLambertMaterial({color:0x0a0a0e});const body=new THREE.Mesh(new THREE.CylinderGeometry(.35,.6,2.3,8),dm);body.position.y=1.15;const hd=new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),dm);hd.position.y=2.55;hd.scale.set(1,1.25,1);keep.add(body,hd);
+for(const ex of[-.13,.13]){const e=new THREE.Mesh(new THREE.SphereGeometry(.06,6,5),new THREE.MeshBasicMaterial({color:0xff1a1a}));e.position.set(ex,2.62,.28);keep.add(e);shopEyes.push(e)}
+const mo=new THREE.Mesh(new THREE.BoxGeometry(.3,.05,.04),new THREE.MeshBasicMaterial({color:0xff1a1a}));mo.position.set(0,2.4,.31);keep.add(mo);keep.position.set(cx,0,95);keep.rotation.y=0;scene.add(keep);
+for(let k=0;k<5;k++){const ch=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,2.4,4),new THREE.MeshBasicMaterial({color:0x555560}));ch.position.set(cx-6+k*3,4.6,98.6);scene.add(ch)}
+shopL=new THREE.PointLight(0xff2020,1.6,16);shopL.position.set(cx,3,96);scene.add(shopL);const sl2=new THREE.PointLight(0x66ff88,.6,8);sl2.position.set(cx,2,94);scene.add(sl2)}
 // couch (faces the spawn)
-{const CX=61,CZ=67;box(3,.3,1.1,0x4a1f2b,CX,.3,CZ);box(1.4,.2,.9,0x7a3347,CX-.72,.55,CZ-.05);box(1.4,.2,.9,0x7a3347,CX+.72,.55,CZ-.05);box(3.1,.85,.3,0x5b2636,CX,.85,CZ+.5);box(.3,.65,1.1,0x5b2636,CX-1.45,.62,CZ);box(.3,.65,1.1,0x5b2636,CX+1.45,.62,CZ);OBST.push([CX-1.6,CX+1.6,CZ-.55,CZ+.65,.5])}
+{const CX=61,CZ=67;box(3,.3,1.1,0x4a1f2b,CX,.3,CZ);box(1.4,.2,.9,0x7a3347,CX-.72,.55,CZ-.05);box(1.4,.2,.9,0x7a3347,CX+.72,.55,CZ-.05);box(3.1,.85,.3,0x5b2636,CX,.85,CZ+.5);box(.3,.65,1.1,0x5b2636,CX-1.45,.62,CZ);box(.3,.65,1.1,0x5b2636,CX+1.45,.62,CZ)}
 // computer desk
-const COMP={x:66,z:56.4};
+const COMP={x:66,z:79.6};
 const scrC=document.createElement('canvas');scrC.width=512;scrC.height=300;const scrT=new THREE.CanvasTexture(scrC);
 function drawScreen(){const c=scrC.getContext('2d');c.fillStyle='#04120a';c.fillRect(0,0,512,300);c.fillStyle='#7CFFB0';c.font='bold 30px monospace';c.textAlign='left';c.fillText('> CODE',20,50);c.font='22px monospace';c.fillStyle='#bfffd8';c.fillText('Press E (or A) here',20,110);c.fillText('to type and run code.',20,140);c.fillStyle='#ffd36a';c.fillText(String(CODE.out||'').slice(0,34),20,250);scrT.needsUpdate=true}
-{box(2.4,.08,1.1,0x3a2a20,66,.75,56);for(const[dx,dz]of[[-1.1,-.45],[1.1,-.45],[-1.1,.45],[1.1,.45]])box(.08,.75,.08,0x2a1d16,66+dx,.375,56+dz);
-box(.9,.55,.06,0x111114,66,1.2,55.6);const sc=new THREE.Mesh(new THREE.PlaneGeometry(.82,.47),new THREE.MeshBasicMaterial({map:scrT}));sc.position.set(66,1.2,55.63+.01);sc.rotation.y=Math.PI;scene.add(sc);box(.1,.2,.1,0x111114,66,.9,55.6);box(.6,.03,.2,0x222228,66,.8,56.15);OBST.push([64.8,67.2,55.4,56.6,.8])}
+{const DX=66,DZ=81.2;box(3.2,.08,1.2,0x3a2a20,DX,.75,DZ);for(const[dx,dz]of[[-1.5,-.5],[1.5,-.5],[-1.5,.5],[1.5,.5]])box(.08,.75,.08,0x2a1d16,DX+dx,.375,DZ+dz);
+box(1.75,1.3,.08,0x111114,DX,1.5,81.62);const sc=new THREE.Mesh(new THREE.PlaneGeometry(1.6,1.18),new THREE.MeshBasicMaterial({map:scrT}));sc.position.set(DX,1.5,81.57);sc.rotation.y=Math.PI;scene.add(sc);box(.18,.3,.12,0x111114,DX,.92,81.6);
+box(1.5,.05,.5,0x222228,DX,.8,80.65);for(let r=0;r<4;r++)for(let k=0;k<14;k++)box(.085,.02,.085,0x6a6a78,DX-.64+k*.098,.83,80.5+r*.1);
+OBST.push([DX-1.6,DX+1.6,80.6,81.8,.8]);const dl=new THREE.PointLight(0x7CFFB0,.7,8);dl.position.set(DX,1.6,80);scene.add(dl)}
 // staff-room floor, light and the mirror door (walls are in the map; only Moderators and the Owner can walk through)
 pad(20,18,32,23,new THREE.MeshLambertMaterial({color:0x2a1f3a}));
 {const l=new THREE.PointLight(0xffe0c0,1.0,30);l.position.set(53,2.6,42);scene.add(l)}
@@ -659,7 +687,7 @@ c.font='bold 14px sans-serif';c.fillStyle='#ffd36a';c.fillText(String(CODE.out).
 for(let r=0;r<4;r++){const row=KR[r][CODE.sym];for(let i=0;i<10;i++){let ch=row[i];const lab=(!CODE.sym&&CODE.shift)?ch.toUpperCase():ch;bt(o,4+i*63.4,296+r*44,58,40,lab,()=>typeCh(lab),'#2a3550',20)}}
 bt(o,6,476,90,40,CODE.shift?'SHIFT*':'Shift',()=>{CODE.shift=CODE.shift?0:1},CODE.shift?'#2a6a45':'#3a3f5c',16);bt(o,102,476,90,40,CODE.sym?'abc':'#+=',()=>{CODE.sym=CODE.sym?0:1},'#3a3f5c',16);
 bt(o,198,476,240,40,'space',()=>typeCh(' '),'#2a3550',16);bt(o,444,476,100,40,'Enter',()=>typeCh('\n'),'#2a3550',16);bt(o,550,476,84,40,'Back',()=>{CODE.src=CODE.src.slice(0,-1)},'#6a2a3a',16)}
-const vpC=mkVP('vpC',640,520,1.1,drawCode);
+const vpC=mkVP('vpC',640,520,1.7,drawCode);vpC.fixed=1;vpC.mesh.position.set(COMP.x,1.55,81.45);vpC.mesh.rotation.set(0,Math.PI,0);
 function codeKey(e){if(!vpC.vis)return false;if(e.code==='Escape'){showVP(vpC,0);e.preventDefault();return true}
 if(e.key==='Enter')CODE.src+='\n';else if(e.key==='Backspace')CODE.src=CODE.src.slice(0,-1);else if(e.key==='Tab')CODE.src+='  ';else if(e.key.length===1&&!e.ctrlKey&&!e.metaKey)CODE.src+=e.key;else return false;
 e.preventDefault();paint(vpC);return true}
@@ -683,10 +711,10 @@ if(Math.hypot(HX-COMP.x,HZ-COMP.z)<3.4){showVP(vpC,1);return true}
 if(slapNearest())return true;
 const it=itemNear(HX,HY-.4,HZ,2.4);if(it){it.held='desk';heldItem=it;return true}return false}
 let compNear=0,stairCD=0;
-function extraFrame(dt){const now=performance.now();
+function extraFrame(dt){const now=performance.now();if(shopL){shopL.intensity=1.2+Math.sin(now*.013)*.3+(Math.random()<.06?-.9:0);const near=Math.hypot(HX-SHOP.x,HZ-(SHOP.z+1.5))<5;if(near&&!shopNear)msg('The shopkeeper stares at you... (shop items coming soon)');shopNear=near;for(const e of shopEyes)e.visible=Math.sin(now*.004)>-.9}
 stairCD=Math.max(0,stairCD-dt);
-if(!stairCD&&!S.dead&&!S.grabbed){if(Math.hypot(HX-HOLE.x,HZ-HOLE.z)<1.1&&P.y<.4){stairCD=2.5;teleportTo(ugStart[0],ugStart[1]);msg('Underground! Monsters hunt here. The green plaza is safe, and the stairs UP are in it.')}
-else if(Math.hypot(HX-UPS.x,HZ-UPS.z)<1.1){stairCD=2.5;teleportTo(HOLE.x,HOLE.z+4);msg('Back up in the lobby')}}
+if(!stairCD&&!S.dead&&!S.grabbed){if(HX>=RAMP.x0&&HX<=RAMP.x1&&HZ>=RAMP.z1-.5&&HZ<=RAMP.ze&&P.y<.4){stairCD=2.5;teleportTo(ugStart[0],ugStart[1]);msg('Underground! Monsters hunt here. The green plaza is safe, and the stairs UP are in it.')}
+else if(Math.hypot(HX-UPS.x,HZ-UPS.z)<1.1){stairCD=2.5;teleportTo(RTOP.x,RTOP.z);msg('Back up on the surface')}}
 const near=Math.hypot(HX-COMP.x,HZ-COMP.z)<3.4;if(near&&!compNear&&!vpC.vis)msg('Press E (or A) to use the computer');compNear=near;
 let L=null,Rt=null;if(vrNow())for(const t of CT)if(t.src)(t.src.handedness==='left'?L=t:Rt=t);
 [L,Rt].forEach((t,i)=>{if(!t){lg[i]=0;lhp[i]=null;return}const gp=t.src.gamepad,b=gp?gp.buttons:[],gr=!!(b[1]&&b[1].pressed),p=hw(t),pv=lhp[i],v=pv&&dt>0?[(p[0]-pv[0])/dt,(p[1]-pv[1])/dt,(p[2]-pv[2])/dt]:[0,0,0];lhp[i]=p;
