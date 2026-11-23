@@ -35,7 +35,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E use computer / pick up plush, Tab leaderboard, P phone<br>VR: touch the ground or a wall with a hand and push to move, push off to launch (phone: switch to Stick walking, Reach, Fast/Moon). Right stick turns. Grip grabs plush toys, A near the computer to code. Walk into the DOWN hole to go underground (monsters!). Stairs UP are in the underground green plaza.</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>HOLLOW MALL</h1><p class="sub">After hours in an empty mall. Code at the computer, check the top survivors, and don’t look too long in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 36 · mall lobby · the mimic · no building</div>
+<h1>HOLLOW MALL</h1><p class="sub">After hours in an empty mall. Code at the computer, check the top survivors, and don’t look too long in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 37 · ground walking fixed · B to jump · hand mode</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -454,15 +454,16 @@ const tg=(x,y,l,k,fn)=>bt(o,x,y,162,38,l+': '+(k?'ON':'off'),fn,k?'#2a6a45':'#3a
 tg(14,256,'Invisible',S.inv,()=>S.inv=S.inv?0:1);tg(184,256,isStaff()?'No-clip':'No-clip (staff)',S.nc,()=>{if(isStaff())S.nc=S.nc?0:1});tg(14,300,'ESP',S.esp,()=>S.esp=S.esp?0:1);tg(184,300,'Night vision',S.bright,()=>{S.bright=S.bright?0:1;applyNight()});
 tg(14,344,'Shield badge',S.badge,()=>S.badge=S.badge?0:1);
 const flAdj=d=>{S.fl=Math.max(-1,Math.min(1,Math.round((S.fl+d)*100)/100));try{localStorage.setItem('pfh_fl',S.fl)}catch(e){}msg('Floor offset '+(S.fl*100|0)+' cm (lower = your hands reach the ground sooner)')};const htAdj=d=>{S.ht=Math.max(-1.2,Math.min(1.2,Math.round(((S.ht||0)+d)*100)/100));try{localStorage.setItem('pfh_ht',S.ht)}catch(e){}msg('Hand tilt '+Math.round((S.ht||0)*57.3)+'°')};bt(o,10,388,52,38,'Floor ▼',()=>flAdj(-.04),'#2a3550',12);bt(o,66,388,52,38,'Floor ▲',()=>flAdj(.04),'#2a3550',12);bt(o,122,388,52,38,'Hand ▲',()=>htAdj(-.1),'#3a2a50',12);bt(o,178,388,52,38,'Hand ▼',()=>htAdj(.1),'#3a2a50',12);bt(o,234,388,60,38,'Flip curl',()=>{S.curl2=S.curl2?0:1;try{localStorage.setItem('pfh_curl2',S.curl2)}catch(e){}msg(S.curl2?'Fingers now curl the other way':'Fingers curl the first way')},'#2a3a50',11);bt(o,298,388,52,38,S.longArms?'Long':'Reach',()=>{S.longArms=S.longArms?0:1},S.longArms?'#2a6a45':'#3a3f5c',12);if(0)bt(o,266,388,80,38,GTP[S.mv||0].n+' ▸',()=>{const ok=i=>i===0||isStaff()||(i===1&&S.own&&S.own.fast)||(i===2&&S.own&&S.own.moon);let n=S.mv||0;for(let k=0;k<GTP.length;k++){n=(n+1)%GTP.length;if(ok(n))break}S.mv=n;if(n===0&&!isStaff())msg('Buy Moon Boots / Speed Gloves at the shop for more presets')},'#2a3550',14);
+bt(o,10,434,340,38,'Hand mode: '+HM_NAMES[(S.hm||0)%HM_NAMES.length]+'  ▸',()=>{S.hm=((S.hm||0)+1)%HM_NAMES.length;try{localStorage.setItem('pfh_hm',S.hm)}catch(e){}msg('Hand mode: '+HM_NAMES[S.hm]+'. Check it lines up with your hand')},'#3a2a50',16);
 const tb=bots.find(b=>b.name===ST.tgt),isM=tb&&tb.role==='Moderator';bt(o,184,344,162,38,isM?'Remove mod':'Make mod',()=>{ST.m=setRole(ST.tgt,isM?'Player':'Moderator');if(ST.m==='ok'||ST.m==='sent')ST.m=(isM?'Removed mod: ':'Made mod: ')+ST.tgt;msg(ST.m)},S.role==='Owner'?'#5a3a8a':'#2a2a33',16);
-tx(c,'Reports ('+S.reports.length+')',14,454,17,'#ff9aa8');const r=S.reports[0];
-if(r){tx(c,(r.by+' → '+r.who).slice(0,30),14,478,16,'#fff');tx(c,r.why,14,498,14,'#aab');bt(o,190,462,76,40,'Select',()=>{ST.tgt=r.who;const i=RE.indexOf(r.why);if(i>=0)ST.ri=i},'#2a5a8a',15);bt(o,272,462,74,40,'Dismiss',()=>{if(NET.mode==='client')netSend({t:'dismiss',rid:r.id});S.reports=S.reports.filter(x=>x.id!==r.id)},'#555',15)}else tx(c,'No reports',14,478,15,'#778');
-tx(c,ST.m||'Hold right trigger + point at a player to select',14,530,14,'#9fe0b0');let y=554;for(const l of S.log){tx(c,l.slice(0,40),14,y,12,'#889');y+=18}}
+tx(c,'Reports ('+S.reports.length+')',14,494,17,'#ff9aa8');const r=S.reports[0];
+if(r){tx(c,(r.by+' → '+r.who).slice(0,30),14,518,16,'#fff');tx(c,r.why,14,538,14,'#aab');bt(o,190,502,76,40,'Select',()=>{ST.tgt=r.who;const i=RE.indexOf(r.why);if(i>=0)ST.ri=i},'#2a5a8a',15);bt(o,272,502,74,40,'Dismiss',()=>{if(NET.mode==='client')netSend({t:'dismiss',rid:r.id});S.reports=S.reports.filter(x=>x.id!==r.id)},'#555',15)}else tx(c,'No reports',14,518,15,'#778');
+tx(c,ST.m||'Hold right trigger + point at a player to select',14,570,14,'#9fe0b0');let y=594;for(const l of S.log){tx(c,l.slice(0,40),14,y,12,'#889');y+=18}}
 function drawL(o,c){const ban=S.letter&&S.letter.k==='ban';rr(c,0,0,o.w,o.h,12,ban?'#2a1014':'#f3e7c8');c.lineWidth=6;c.strokeStyle=ban?'#a02030':'#a8905a';c.stroke();
 tx(c,ban?'YOU HAVE BEEN BANNED':'OFFICIAL WARNING',o.w/2,64,34,ban?'#ff5a6a':'#7a1f2b','center');
 if(ban){wrap(c,S.banT>=9e15?'A moderator banned you permanently.':'A moderator banned you until '+new Date(S.banT).toLocaleTimeString()+'.',34,120,o.w-68,34,24,'#fbb')}
 else{const y=wrap(c,'Dear player, you have been warned by a moderator.',34,120,o.w-68,32,22,'#3a2f1a');wrap(c,'Reason: '+((S.letter&&S.letter.why)||'rule violation')+'.  Warnings so far: '+S.strikes+'. Breaking the rules again can lead to a mute or ban.'+(NET.mode==='client'?' After you tap the button you will be removed from the game, but you can rejoin.':''),34,y+8,o.w-68,32,22,'#3a2f1a');bt(o,o.w/2-110,o.h-76,220,52,'I understand',()=>{showVP(vpL,0);if(NET.mode==='client'&&S.warnKick)kickOut()},'#7a1f2b',22)}}
-const vpB=mkVP('vpB',460,500,1,drawB),vpR=mkVP('vpR',360,420,.8,drawR),vpP=mkVP('vpP',360,660,.34,drawPhone),vpL=mkVP('vpL',520,380,.9,drawL);
+const vpB=mkVP('vpB',460,500,1,drawB),vpR=mkVP('vpR',360,420,.8,drawR),vpP=mkVP('vpP',360,740,.34,drawPhone),vpL=mkVP('vpL',520,380,.9,drawL);
 function drawBansPhone(o,c){rr(c,0,0,o.w,o.h,34,'#0d0f16');c.lineWidth=6;c.strokeStyle=badgeCol(S.role);c.stroke();tx(c,'BAN LOG',20,44,22,'#fff');bt(o,250,14,96,38,'◂ Back',()=>{ST.pg='main'},'#2a3550',16);
 const now=Date.now(),l=S.bans.filter(x=>x.until>now).slice(0,7);if(!l.length)tx(c,'No active bans',o.w/2,140,22,'#9aa','center');let y=70;
 for(const e of l){rr(c,10,y,o.w-20,64,10,'#1d2030');tx(c,e.name.slice(0,12),20,y+26,20,'#fff');const left=e.until>=9e15?'permanent':Math.ceil((e.until-now)/60000)+' min left';tx(c,'by '+String(e.by).slice(0,9)+' · '+left,20,y+50,13,'#f3b6cf');bt(o,o.w-112,y+12,92,40,'Unban',()=>{ST.m=unban(e.name);msg(ST.m==='ok'?'Unbanned '+e.name:ST.m)},'#2a6a45',17);y+=70}}
@@ -535,7 +536,7 @@ if(t===L){if(edge(t,5,b)===1)toggleMic();const x=edge(t,4,b);if(x===1){const now
 
 
 }
-else{const a=edge(t,4,b);if(a===1)use();const tr=edge(t,0,b);
+else{const a=edge(t,4,b);if(a===1)use();const tr=edge(t,0,b);if(edge(t,5,b)===1&&P.on&&started&&!S.nc&&!S.dead&&!S.grabbed&&!S.banT){P.vy=JUMP_V;P.on=0;GT.jt=.3;GT.launch=null;GT.prevT=0;buzz(t,.2,30)}
 if(tr===1){const pr=panelRay(t);if(pr)hitVP(pr.vp,pr.x,pr.y);else aimOn=1}
 if(tr===-1&&aimOn){aimOn=0;const bb=aimBot;aimBot=null;if(bb){if(isStaff()){ST.tgt=bb.name;showVP(vpP,1);msg('Selected '+bb.name)}else{ST.rep=bb.name;showVP(vpR,1)}}}}}
 lineM.visible=false;
@@ -555,7 +556,7 @@ addEventListener('keyup',e=>KEYS[e.code]=0);addEventListener('blur',()=>{for(con
 document.addEventListener('mousemove',e=>{if(document.pointerLockElement===$('c')&&started&&!vrNow()){P.yaw-=e.movementX*.0025;P.pit=Math.max(-1.4,Math.min(1.4,P.pit-e.movementY*.0025))}});
 $('c').addEventListener('mousedown',()=>{if(!started||vrNow())return;if(document.pointerLockElement===$('c'))return;if(!VPS.some(v=>v.vis)&&$('c').requestPointerLock)$('c').requestPointerLock()});
 // ---------- VR session
-ren.xr.addEventListener('sessionstart',()=>{S.vr=1;vrT=0;stkT=0;rig.position.set(P.x,RY+S.fl+P.y,P.z);rig.rotation.y=P.yaw;cam.rotation.set(0,0,0);okX=P.x;okZ=P.z;for(const v of VPS)if(v.vis)showVP(v,1);msg('Touch the ground with your hands and push to walk')});
+ren.xr.addEventListener('sessionstart',()=>{S.vr=1;vrT=0;stkT=0;gtReset();rig.position.set(P.x,RY+S.fl+P.y,P.z);rig.rotation.y=P.yaw;cam.rotation.set(0,0,0);okX=P.x;okZ=P.z;for(const v of VPS)if(v.vis)showVP(v,1);msg('Touch the ground with your hands and push to walk')});
 ren.xr.addEventListener('sessionend',()=>{S.vr=0;rig.position.set(0,0,0);rig.rotation.set(0,0,0);vpP.mesh.parent!==scene&&scene.add(vpP.mesh);vpP.mesh.position.set(0,0,0);vpP.mesh.rotation.set(0,0,0);pouch.visible=heldM.visible=ghost.visible=lineM.visible=false;holding=0;for(const v of VPS)if(v.vis)showVP(v,1)});
 $('bVR').onclick=async()=>{const go=async()=>{const s=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor']});await ren.xr.setSession(s)};try{RY=0;ren.xr.setReferenceSpaceType('local-floor');await go()}catch(e){try{RY=1.6;ren.xr.setReferenceSpaceType('local');await go()}catch(e2){msg('Couldn’t start VR: '+(e2.message||e2))}}};
 if(navigator.xr&&navigator.xr.isSessionSupported)navigator.xr.isSessionSupported('immersive-vr').then(ok=>{$('bVR').textContent=ok?'Enter VR':'VR not available here';$('bVR').disabled=!ok}).catch(()=>{});else{$('bVR').textContent='VR not available here';$('bVR').disabled=true}
@@ -576,7 +577,7 @@ const setNote=t=>{$('note').textContent=t;try{$('menu').scrollTop=0}catch(e){}};
 addEventListener('error',e=>{if(!started)setNote('Error: '+(e.message||'something broke')+'. Tell me this message.')});
 addEventListener('unhandledrejection',e=>{if(!started)setNote('Error: '+((e.reason&&e.reason.message)||e.reason||'something broke'))});
 function simBots(){for(const n of['Mira','Jax','Pip']){const b=newOther('s'+n,n,1);b.x=start[0]+(R()-.5)*10;b.z=start[1]-2-R()*6;b.yaw=R()*6;b.score=(R()*40)|0}}
-function beginGame(mode){try{S.fl=parseFloat(localStorage.getItem('pfh_fl'))||0;S.ht=parseFloat(localStorage.getItem('pfh_ht'))||0;S.curl2=parseInt(localStorage.getItem('pfh_curl2'))||0}catch(e){}NET.mode=mode;if(mode!=='solo')startVoice();started=true;ambience();$('menu').style.display='none';$('hud').style.display='block';P.x=start[0];P.z=start[1];P.y=0;S.stick=0;P.vx=P.vy=P.vz=0;P.yaw=0;P.pit=0;okX=P.x;okZ=P.z;S.dead=0;S.banT=0;S.score=0;if(mode!=='client')simBots();applyNight();fx('');
+function beginGame(mode){try{S.fl=parseFloat(localStorage.getItem('pfh_fl'))||0;S.ht=parseFloat(localStorage.getItem('pfh_ht'))||0;S.curl2=parseInt(localStorage.getItem('pfh_curl2'))||0;S.hm=parseInt(localStorage.getItem('pfh_hm'))||0}catch(e){}NET.mode=mode;if(mode!=='solo')startVoice();started=true;ambience();$('menu').style.display='none';$('hud').style.display='block';P.x=start[0];P.z=start[1];P.y=0;S.stick=0;P.vx=P.vy=P.vz=0;P.yaw=0;P.pit=0;okX=P.x;okZ=P.z;S.dead=0;S.banT=0;S.score=0;if(mode!=='client')simBots();applyNight();fx('');
 msg('Tap X twice for your phone.')}
 function showMenu(t){started=false;for(const v of VPS)showVP(v,0);$('hud').style.display='none';$('menu').style.display='flex';setNote(t||'');try{const s=ren.xr.getSession&&ren.xr.getSession();s&&s.end()}catch(e){}}
 function pre(){S.name=($('nm').value||'Player').replace(/[^\w \-]/g,'').slice(0,14)||'Player';S.gore=$('gore').checked?1:0;S.smooth=$('sm')&&$('sm').checked?1:0;S.col=($('col')&&$('col').value)||'#c0392b';try{localStorage.setItem('pfh_n',S.name);localStorage.setItem('pfh_r',$('rs').value);localStorage.setItem('pfh_c',S.col);localStorage.setItem('pfh_s',S.smooth?'1':'0')}catch(e){}}
@@ -787,9 +788,11 @@ const KBX=66,KBZ=51.0,KBW=1.44,KBD=.44;
 function kbKeyAt(x,z){const u=(x-(KBX-KBW/2))/KBW,v=(z-(KBZ-KBD/2))/KBD;if(u<0||u>=1||v<0||v>=1)return null;const r=Math.floor(v*5);for(const k of FK)if(k.r===r&&u>=k.x0&&u<k.x1)return k;return null}
 function kbPress(k){if(k.ch)typeCh(k.ch);else if(k.cmd==='space')typeCh(' ');else if(k.cmd==='enter')CODE.src+='\n';else if(k.cmd==='back')CODE.src=CODE.src.slice(0,-1);else if(k.cmd==='run')runCode();snd(640,.04,'square',.04);if(vpC.vis)paint(vpC)}
 const _v=new THREE.Vector3(),_q=new THREE.Quaternion();
+const HM_NAMES=['Normal','Turn 90 around X','Turn -90 around X','Turn 90 around Y','Turn -90 around Y','Turn 90 around Z','Turn -90 around Z','Upside down'];
+const HM_Q=[[0,0,0,0],[1,0,0,Math.PI/2],[1,0,0,-Math.PI/2],[0,1,0,Math.PI/2],[0,1,0,-Math.PI/2],[0,0,1,Math.PI/2],[0,0,1,-Math.PI/2],[1,0,0,Math.PI]].map(([x,y,z,a])=>{const q=new THREE.Quaternion();if(a)q.setFromAxisAngle(new THREE.Vector3(x,y,z),a);return q});
 function handFrame(dt){for(let i=0;i<2;i++){const t=CT[i];if(!t||!t.src)continue;const left=t.src.handedness==='left';if(t.o.children[0])t.o.children[0].visible=false;if(!HV[i])HV[i]=mkHand(left);if(!GR[i]){try{GR[i]=ren.xr.getControllerGrip(i);rig.add(GR[i])}catch(e){GR[i]=null}}
 const h=HV[i],gp=t.src.gamepad,b=gp?gp.buttons:[],val=x=>x?(x.value!==undefined&&x.value>0?x.value:(x.pressed?1:0)):0,gr=val(b[1]),tr=val(b[0]),held=heldItem&&heldItem.held===i+1?1:0,cg=Math.max(gr,held),ob=GR[i]||t.o;
-try{ob.getWorldQuaternion(_q);h.quaternion.copy(_q);if(S.ht)h.rotateX(S.ht)}catch(e){}
+try{ob.getWorldQuaternion(_q);h.quaternion.copy(_q);if(S.hm)h.quaternion.multiply(HM_Q[S.hm%HM_Q.length]);if(S.ht)h.rotateX(S.ht)}catch(e){}
 if(S.longArms){const p=gtHand(t);h.position.set(p[0],p[1]+FLY,p[2])}else{try{ob.getWorldPosition(_v);h.position.set(_v.x,_v.y,_v.z)}catch(e){const p=hw(t);h.position.set(p[0],p[1]+FLY,p[2])}}
 h.visible=true;
 // fingers: relaxed at 12%, curl to a fist when you grip; the index also follows the trigger. S.curl picks the bend axis and side
@@ -822,15 +825,17 @@ mirrorPass(dt)}
 // ---------- Gorilla Tag arm locomotion (ported from the template's GorillaLocomotion: hand sticks to what it touches, push off to launch)
 const GTP=[{n:'Normal',jm:1.1,mj:6.5,gs:1},{n:'Fast',jm:1.5,mj:9,gs:1},{n:'Moon',jm:1.1,mj:6.5,gs:.4}];
 S.longArms=0;
-const GT={hist:[],hi:0,lh:[null,null],was:[0,0],q0:null,launch:null,prevT:0},HAND_R=.12,ARM_MAX=1.5,VEL_HIST=6,VEL_LIMIT=.3;
-function gtReset(){GT.lh=[null,null];GT.was=[0,0];GT.q0=null;GT.hist.length=0;GT.hi=0;GT.launch=null;GT.prevT=0}
+const GT={hist:[],hi:0,lh:[null,null],was:[0,0],q0:null,launch:null,prevT:0,jt:0},HAND_R=.12,ARM_MAX=2.2,VEL_HIST=6,VEL_LIMIT=.3,JUMP_V=4.8,HAND_REST=.05;
+function gtReset(){GT.lh=[null,null];GT.was=[0,0];GT.q0=null;GT.hist.length=0;GT.hi=0;GT.launch=null;GT.prevT=0;GT.jt=0}
 function gtHand(t){const w=hw(t),k=S.longArms?1.8:1,mx_=ARM_MAX*(S.longArms?1.6:1);let rx=(w[0]-HX)*k,ry=(w[1]-HY)*k,rz=(w[2]-HZ)*k;const l=Math.hypot(rx,ry,rz);if(l>mx_){rx*=mx_/l;ry*=mx_/l;rz*=mx_/l}return[HX+rx,HY+ry,HZ+rz]}
 const handHit=(p,m)=>{if(p[0]<=0||p[0]>=120||p[2]<=0||p[2]>=120)return false;const r=HAND_R+(m||0);let h=0;for(const d of[[0,0],[r,0],[-r,0],[0,r],[0,-r]])h=Math.max(h,surfH(p[0]+d[0],p[2]+d[1]));return p[1]<=h+r+.1};
+const surfAt=p=>{let h=0;for(const d of[[0,0],[HAND_R,0],[-HAND_R,0],[0,HAND_R],[0,-HAND_R]])h=Math.max(h,surfH(p[0]+d[0],p[2]+d[1]));return h};
 function gtLoco(dt,L,Rt){const pr=GTP[S.mv||0],hs=[L,Rt],first=[[0,0,0],[0,0,0]],hit=[0,0],cur=[null,null];
 for(let i=0;i<2;i++){const t=hs[i];if(!t){GT.lh[i]=null;GT.was[i]=0;continue}
 const c=gtHand(t),last=GT.lh[i]||c;cur[i]=c;const dx=c[0]-last[0],dy=c[1]-last[1]-2*9.8*dt*dt,dz=c[2]-last[2];let prev=last,hp=null;
 for(let k=1;k<=8;k++){const f=k/8,p=[last[0]+dx*f,last[1]+dy*f,last[2]+dz*f];if(handHit(p,GT.was[i]?.07:0)){hp=prev;break}prev=p}
-if(hp){hit[i]=1;first[i]=GT.was[i]?[last[0]-c[0],last[1]-c[1],last[2]-c[2]]:[hp[0]-c[0],hp[1]-c[1],hp[2]-c[2]];if(!GT.was[i])buzz(t,.35,30)}}
+if(hp){hit[i]=1;const cp=GT.was[i]?last:hp;first[i]=[cp[0]-c[0],cp[1]-c[1],cp[2]-c[2]];if(surfAt(cp)<.5)first[i][1]=Math.max(0,HAND_REST-c[1]);if(!GT.was[i])buzz(t,.35,30)}}
+if(GT.jt>0){GT.jt-=dt;hit[0]=0;hit[1]=0}
 const any=hit[0]||hit[1];let mv=[0,0,0];
 if(any){const both=(hit[0]||GT.was[0])&&(hit[1]||GT.was[1]),k=both?.5:1;mv=[(first[0][0]+first[1][0])*k,(first[0][1]+first[1][1])*k,(first[0][2]+first[1][2])*k];const l=Math.hypot(mv[0],mv[1],mv[2]);if(l>.6)mv=mv.map(v=>v*.6/l)}
 const x0=rig.position.x,z0=rig.position.z,y0=P.y;
@@ -842,7 +847,7 @@ GT.was=[hit[0],hit[1]];
 // velocity history (player movement per second) -> launch speed
 const q=[rig.position.x,P.y,rig.position.z];if(GT.q0){GT.hist[GT.hi%VEL_HIST]=[(q[0]-GT.q0[0])/dt,(q[1]-GT.q0[1])/dt,(q[2]-GT.q0[2])/dt];GT.hi++}GT.q0=q;
 let a=[0,0,0];for(const v of GT.hist){if(!v)continue;a[0]+=v[0];a[1]+=v[1];a[2]+=v[2]}const n=GT.hist.length||1;a=a.map(v=>v/n);
-if(any){P.vy=0;lvx=lvz=0;const sp=Math.hypot(a[0],a[1],a[2]);if(sp>VEL_LIMIT){let V=a.map(v=>v*pr.jm);const m=Math.hypot(V[0],V[1],V[2]);if(m>pr.mj)V=V.map(v=>v*pr.mj/m);GT.launch=V}else GT.launch=null}
+if(any){P.vy=0;lvx=lvz=0;const sp=Math.hypot(a[0],a[1],a[2]);if(sp>VEL_LIMIT){let V=a.map((v,i)=>v*pr.jm*(i===1?2.6:1));const m=Math.hypot(V[0],V[1],V[2]);if(m>pr.mj)V=V.map(v=>v*pr.mj/m);GT.launch=V}else GT.launch=null}
 else{if(GT.prevT&&GT.launch){lvx=GT.launch[0];lvz=GT.launch[2];P.vy=GT.launch[1]>0?GT.launch[1]:0;GT.launch=null}
 const f=Math.exp(-(P.on?6:.15)*dt);lvx*=f;lvz*=f;if(Math.abs(lvx)>.01||Math.abs(lvz)>.01)moveRig(lvx*dt,lvz*dt)}
 GT.prevT=any?1:0}
