@@ -35,7 +35,7 @@ input[type=text],select{width:100%;padding:12px;border-radius:10px;border:1px so
 <canvas id="c"></canvas><div id="fx"></div><div id="toast"></div>
 <div id="hud"><span></span><small>Desktop: WASD + mouse, E use computer / pick up plush, Tab leaderboard, P phone<br>VR: touch the ground or a wall with a hand and push to move, push off to launch (phone: switch to Stick walking, Reach, Fast/Moon). Right stick turns. Grip grabs plush toys, A near the computer to code. Walk into the DOWN hole to go underground (monsters!). Stairs UP are in the underground green plaza.</small><br><button id="bMic">🎤 Mic on/off</button> <button id="bVR" disabled>Enter VR</button></div>
 <div id="menu"><div class="card">
-<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 33 · blank map: computer, leaderboard, staff room · 3-finger hands</div>
+<h1>PILLOW FORT HORROR</h1><p class="sub">A blank dirt lobby. Sit, code, and look in the mirror.</p><div style="font-size:11px;opacity:.55;margin:-6px 0 8px">Build 34 · white 3-finger hands with knuckle curl · Curl button</div>
 <div id="note"></div>
 <label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="Player" autocomplete="off">
 <label for="rs">If you host or play solo, you are… (pick Player to play normally)</label><select id="rs"><option>Owner</option><option>Moderator</option><option>Player</option></select>
@@ -448,7 +448,7 @@ bt(o,14,200,80,46,'Warn',()=>act('Warn'),'#8a6a1a',18);bt(o,100,200,80,46,'Mute'
 const tg=(x,y,l,k,fn)=>bt(o,x,y,162,38,l+': '+(k?'ON':'off'),fn,k?'#2a6a45':'#3a3f5c',16);
 tg(14,256,'Invisible',S.inv,()=>S.inv=S.inv?0:1);tg(184,256,isStaff()?'No-clip':'No-clip (staff)',S.nc,()=>{if(isStaff())S.nc=S.nc?0:1});tg(14,300,'ESP',S.esp,()=>S.esp=S.esp?0:1);tg(184,300,'Night vision',S.bright,()=>{S.bright=S.bright?0:1;applyNight()});
 tg(14,344,'Shield badge',S.badge,()=>S.badge=S.badge?0:1);
-const flAdj=d=>{S.fl=Math.max(-1,Math.min(1,Math.round((S.fl+d)*100)/100));try{localStorage.setItem('pfh_fl',S.fl)}catch(e){}msg('Floor offset '+(S.fl*100|0)+' cm (lower = your hands reach the ground sooner)')};const htAdj=d=>{S.ht=Math.max(-1.2,Math.min(1.2,Math.round(((S.ht||0)+d)*100)/100));try{localStorage.setItem('pfh_ht',S.ht)}catch(e){}msg('Hand tilt '+Math.round((S.ht||0)*57.3)+'°')};bt(o,14,388,66,38,'Floor ▼',()=>flAdj(-.04),'#2a3550',13);bt(o,84,388,66,38,'Floor ▲',()=>flAdj(.04),'#2a3550',13);bt(o,154,388,66,38,'Hand ▲',()=>htAdj(-.1),'#3a2a50',13);bt(o,224,388,66,38,'Hand ▼',()=>htAdj(.1),'#3a2a50',13);bt(o,294,388,52,38,S.longArms?'Long':'Reach',()=>{S.longArms=S.longArms?0:1},S.longArms?'#2a6a45':'#3a3f5c',12);if(0)bt(o,266,388,80,38,GTP[S.mv||0].n+' ▸',()=>{const ok=i=>i===0||isStaff()||(i===1&&S.own&&S.own.fast)||(i===2&&S.own&&S.own.moon);let n=S.mv||0;for(let k=0;k<GTP.length;k++){n=(n+1)%GTP.length;if(ok(n))break}S.mv=n;if(n===0&&!isStaff())msg('Buy Moon Boots / Speed Gloves at the shop for more presets')},'#2a3550',14);
+const flAdj=d=>{S.fl=Math.max(-1,Math.min(1,Math.round((S.fl+d)*100)/100));try{localStorage.setItem('pfh_fl',S.fl)}catch(e){}msg('Floor offset '+(S.fl*100|0)+' cm (lower = your hands reach the ground sooner)')};const htAdj=d=>{S.ht=Math.max(-1.2,Math.min(1.2,Math.round(((S.ht||0)+d)*100)/100));try{localStorage.setItem('pfh_ht',S.ht)}catch(e){}msg('Hand tilt '+Math.round((S.ht||0)*57.3)+'°')};bt(o,10,388,52,38,'Floor ▼',()=>flAdj(-.04),'#2a3550',12);bt(o,66,388,52,38,'Floor ▲',()=>flAdj(.04),'#2a3550',12);bt(o,122,388,52,38,'Hand ▲',()=>htAdj(-.1),'#3a2a50',12);bt(o,178,388,52,38,'Hand ▼',()=>htAdj(.1),'#3a2a50',12);bt(o,234,388,60,38,'Curl '+((S.curl||0)+1)+'/4',()=>{S.curl=((S.curl||0)+1)%4;try{localStorage.setItem('pfh_curl',S.curl)}catch(e){}msg(['Fingers curl into the palm','Palm curl, flipped','Fingers curl sideways','Sideways curl, flipped'][S.curl]+'. Press again until they bend the right way')},'#2a3a50',12);bt(o,298,388,52,38,S.longArms?'Long':'Reach',()=>{S.longArms=S.longArms?0:1},S.longArms?'#2a6a45':'#3a3f5c',12);if(0)bt(o,266,388,80,38,GTP[S.mv||0].n+' ▸',()=>{const ok=i=>i===0||isStaff()||(i===1&&S.own&&S.own.fast)||(i===2&&S.own&&S.own.moon);let n=S.mv||0;for(let k=0;k<GTP.length;k++){n=(n+1)%GTP.length;if(ok(n))break}S.mv=n;if(n===0&&!isStaff())msg('Buy Moon Boots / Speed Gloves at the shop for more presets')},'#2a3550',14);
 const tb=bots.find(b=>b.name===ST.tgt),isM=tb&&tb.role==='Moderator';bt(o,184,344,162,38,isM?'Remove mod':'Make mod',()=>{ST.m=setRole(ST.tgt,isM?'Player':'Moderator');if(ST.m==='ok'||ST.m==='sent')ST.m=(isM?'Removed mod: ':'Made mod: ')+ST.tgt;msg(ST.m)},S.role==='Owner'?'#5a3a8a':'#2a2a33',16);
 tx(c,'Reports ('+S.reports.length+')',14,454,17,'#ff9aa8');const r=S.reports[0];
 if(r){tx(c,(r.by+' → '+r.who).slice(0,30),14,478,16,'#fff');tx(c,r.why,14,498,14,'#aab');bt(o,190,462,76,40,'Select',()=>{ST.tgt=r.who;const i=RE.indexOf(r.why);if(i>=0)ST.ri=i},'#2a5a8a',15);bt(o,272,462,74,40,'Dismiss',()=>{if(NET.mode==='client')netSend({t:'dismiss',rid:r.id});S.reports=S.reports.filter(x=>x.id!==r.id)},'#555',15)}else tx(c,'No reports',14,478,15,'#778');
@@ -571,7 +571,7 @@ const setNote=t=>{$('note').textContent=t;try{$('menu').scrollTop=0}catch(e){}};
 addEventListener('error',e=>{if(!started)setNote('Error: '+(e.message||'something broke')+'. Tell me this message.')});
 addEventListener('unhandledrejection',e=>{if(!started)setNote('Error: '+((e.reason&&e.reason.message)||e.reason||'something broke'))});
 function simBots(){for(const n of['Mira','Jax','Pip']){const b=newOther('s'+n,n,1);b.x=start[0]+(R()-.5)*10;b.z=start[1]-2-R()*6;b.yaw=R()*6;b.score=(R()*40)|0}}
-function beginGame(mode){try{S.fl=parseFloat(localStorage.getItem('pfh_fl'))||0;S.ht=parseFloat(localStorage.getItem('pfh_ht'))||0}catch(e){}NET.mode=mode;if(mode!=='solo')startVoice();started=true;ambience();$('menu').style.display='none';$('hud').style.display='block';P.x=start[0];P.z=start[1];P.y=0;S.stick=0;P.vx=P.vy=P.vz=0;P.yaw=0;P.pit=0;okX=P.x;okZ=P.z;S.dead=0;S.banT=0;S.score=0;if(mode!=='client')simBots();applyNight();fx('');
+function beginGame(mode){try{S.fl=parseFloat(localStorage.getItem('pfh_fl'))||0;S.ht=parseFloat(localStorage.getItem('pfh_ht'))||0;S.curl=parseInt(localStorage.getItem('pfh_curl'))||0}catch(e){}NET.mode=mode;if(mode!=='solo')startVoice();started=true;ambience();$('menu').style.display='none';$('hud').style.display='block';P.x=start[0];P.z=start[1];P.y=0;S.stick=0;P.vx=P.vy=P.vz=0;P.yaw=0;P.pit=0;okX=P.x;okZ=P.z;S.dead=0;S.banT=0;S.score=0;if(mode!=='client')simBots();applyNight();fx('');
 msg('Tap X twice for your phone.')}
 function showMenu(t){started=false;for(const v of VPS)showVP(v,0);$('hud').style.display='none';$('menu').style.display='flex';setNote(t||'');try{const s=ren.xr.getSession&&ren.xr.getSession();s&&s.end()}catch(e){}}
 function pre(){S.name=($('nm').value||'Player').replace(/[^\w \-]/g,'').slice(0,14)||'Player';S.gore=$('gore').checked?1:0;S.smooth=$('sm')&&$('sm').checked?1:0;S.col=($('col')&&$('col').value)||'#c0392b';try{localStorage.setItem('pfh_n',S.name);localStorage.setItem('pfh_r',$('rs').value);localStorage.setItem('pfh_c',S.col);localStorage.setItem('pfh_s',S.smooth?'1':'0')}catch(e){}}
@@ -763,9 +763,22 @@ if(slapNearest())return true;
 const it=itemNear(HX,HY-.4,HZ,2.4);if(it){it.held='desk';heldItem=it;return true}return false}
 let compNear=0,stairCD=0;
 const HV=[null,null],GR=[null,null];let SB=null;
-function mkHand(left){const g=new THREE.Group(),sk=new THREE.MeshLambertMaterial({color:0xe6cbb4}),pm=new THREE.Mesh(new THREE.BoxGeometry(.07,.03,.095),sk);g.add(pm);const fing=[],sd=left?1:-1;
-for(let k=0;k<3;k++){const j1=new THREE.Group();j1.position.set(-sd*(.02-k*.02),0,-.048);const a=new THREE.Mesh(new THREE.BoxGeometry(.017,.017,.05),sk);a.position.z=-.025;j1.add(a);const j2=new THREE.Group();j2.position.z=-.05;const b=new THREE.Mesh(new THREE.BoxGeometry(.015,.015,.04),sk);b.position.z=-.02;j2.add(b);j1.add(j2);g.add(j1);fing.push({j1,j2})}
-const t1=new THREE.Group();t1.position.set(sd*.045,0,-.02);const ta=new THREE.Mesh(new THREE.BoxGeometry(.02,.02,.045),sk);ta.position.z=-.022;t1.add(ta);t1.rotation.y=sd*.45;g.add(t1);g.userData={fing,t1,sd,tip:null};scene.add(g);return g}
+function mkHand(left){const g=new THREE.Group(),m=new THREE.MeshLambertMaterial({color:0xf2f2f5,emissive:0x17171b}),sd=left?1:-1;
+const pm=new THREE.Mesh(new THREE.SphereGeometry(.04,16,12),m);pm.scale.set(1,.42,1.15);g.add(pm);
+const ball=r=>new THREE.Mesh(new THREE.SphereGeometry(r,12,8),m);
+const seg=(len,r)=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(r*.9,r,len,12),m);c.rotation.x=Math.PI/2;c.position.z=-len/2;return c};
+const XS=[sd*.021,0,-sd*.021],SPL=[-sd*.08,0,sd*.07],fing=[];
+for(let k=0;k<3;k++){const B=new THREE.Group();B.position.set(XS[k],0,-.034);B.rotation.y=SPL[k];g.add(B);
+ const K=new THREE.Group();B.add(K);K.add(ball(.0115),seg(.05,.0105));
+ const J=new THREE.Group();J.position.z=-.05;K.add(J);J.add(ball(.0105),seg(.04,.0098));
+ const tip=new THREE.Group();tip.position.z=-.04;J.add(tip);tip.add(ball(.0098));
+ fing.push({B,K,J,tip})}
+const TB=new THREE.Group();TB.position.set(sd*.036,0,-.012);TB.rotation.y=-sd*.6;g.add(TB);
+const T=new THREE.Group();TB.add(T);T.add(ball(.0125),seg(.04,.0115));
+const TJ=new THREE.Group();TJ.position.z=-.04;T.add(TJ);TJ.add(ball(.0105),seg(.03,.0105));
+g.userData={fing,T,TJ,sd,cur:[0,0,0,0,0,0,0,0],tipObj:fing[0].tip,kd:0};
+scene.add(g);return g}
+function setAx(o,ax,v){if(ax==='x'){o.rotation.x=v;o.rotation.y=0}else{o.rotation.y=v;o.rotation.x=0}}
 const FK=[];(function(){const rows=['1234567890','qwertyuiop','asdfghjkl;','zxcvbnm,.'];rows.forEach((r,ri)=>{const n=r.length,off=ri===3?.05:0,w=(1-2*off)/n;for(let k=0;k<n;k++)FK.push({ch:r[k],x0:off+k*w,x1:off+(k+1)*w,r:ri})});
 FK.push({cmd:'space',lab:'SPACE',x0:0,x1:.5,r:4},{cmd:'enter',lab:'ENTER',x0:.5,x1:.7,r:4},{cmd:'back',lab:'BACK',x0:.7,x1:.85,r:4},{cmd:'run',lab:'RUN',x0:.85,x1:1,r:4})})();
 const KBX=66,KBZ=51.0,KBW=1.44,KBD=.44;
@@ -776,10 +789,15 @@ function handFrame(dt){for(let i=0;i<2;i++){const t=CT[i];if(!t||!t.src)continue
 const h=HV[i],gp=t.src.gamepad,b=gp?gp.buttons:[],val=x=>x?(x.value!==undefined&&x.value>0?x.value:(x.pressed?1:0)):0,gr=val(b[1]),tr=val(b[0]),held=heldItem&&heldItem.held===i+1?1:0,cg=Math.max(gr,held),ob=GR[i]||t.o;
 try{ob.getWorldQuaternion(_q);h.quaternion.copy(_q);if(S.ht)h.rotateX(S.ht)}catch(e){}
 if(S.longArms){const p=gtHand(t);h.position.set(p[0],p[1]+FLY,p[2])}else{try{ob.getWorldPosition(_v);h.position.set(_v.x,_v.y,_v.z)}catch(e){const p=hw(t);h.position.set(p[0],p[1]+FLY,p[2])}}
-h.visible=true;const sd=h.userData.sd;
-h.userData.fing.forEach((f,k)=>{const c=k===0?Math.max(tr,cg):cg;f.j1.rotation.y=-sd*c*1.45;f.j2.rotation.y=-sd*c*1.6});h.userData.t1.rotation.y=sd*.45-sd*cg*1.0;
+h.visible=true;
+// fingers: relaxed at 12%, curl to a fist when you grip; the index also follows the trigger. S.curl picks the bend axis and side
+const U=h.userData,sg=(S.curl&1)?-1:1,ax=(S.curl&2)?'y':'x',rel=.12,kk=Math.min(1,dt*16);
+const want=[];for(let k=0;k<3;k++){const c=rel+(1-rel)*(k===0?Math.max(tr,cg):cg);want.push(sg*c*1.25,sg*c*1.5)}
+const ct=rel+(1-rel)*cg;want.push(sg*ct*.7,sg*ct*.9);
+for(let j=0;j<8;j++)U.cur[j]+=(want[j]-U.cur[j])*kk;
+U.fing.forEach((f,k)=>{setAx(f.K,ax,U.cur[k*2]);setAx(f.J,ax,U.cur[k*2+1])});setAx(U.T,ax,U.cur[6]);setAx(U.TJ,ax,U.cur[7]);
 // poke the desk keyboard with the index fingertip
-try{const tip=new THREE.Vector3(0,0,-.115).applyQuaternion(h.quaternion);const tx_=h.position.x+tip.x,ty=h.position.y+tip.y-FLY,tz=h.position.z+tip.z;
+try{h.updateMatrixWorld(true);U.tipObj.getWorldPosition(_v);const tx_=_v.x,ty=_v.y-FLY,tz=_v.z;
 if(ty>.78&&ty<.9){const k=kbKeyAt(tx_,tz);if(k&&ty<.862&&!h.kd){h.kd=1;kbPress(k);buzz(t,.3,30)}if(ty>.895)h.kd=0}else if(ty>.9||!kbKeyAt(tx_,tz))h.kd=0}catch(e){}}}
 // your own body (VR): the gorilla body hangs under your real head with arms to your real hands
 function bodyFrame(dt){if(!SB){SB={name:S.name,role:S.role,badge:0,x:0,z:0,y:1.6,yaw:0,hl:null,hr:null,inv:0,banT:0,dead:0,sim:0,remote:0,ex:mkEsp(0xffe040,.9,2)};SB.av=mkAvatar(0x4a7bd0)}
